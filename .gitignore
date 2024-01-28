@@ -1,0 +1,13 @@
+.idea/
+
+# not project files
+__pycache__
+.env
+venv
+
+
+# telethon
+ChannelParser.session
+ChannelParser.session-journal
+bot.session-journal
+bot.session
