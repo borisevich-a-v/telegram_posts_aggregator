@@ -1,0 +1,49 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md,markdown
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args:
+          - --profile=black
+          - --line-length=120
+
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3
+        args:
+          - --line-length=120
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: python
+        types: [ python ]
+        args:
+          - --ignore-missing-imports
+          - --scripts-are-modules
+          - --allow-untyped-decorators
+        require_serial: true
+        exclude: tests/
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.0.3
+    hooks:
+        - id: pylint
+          types: [ python ]
+          args:
+            - --errors-only
+            - --disable=import-error
