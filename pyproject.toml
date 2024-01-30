@@ -11,10 +11,12 @@ python = "^3.11"
 telethon = "^1.33.1"
 python-dotenv = "^1.0.1"
 loguru = "^0.7.2"
+pendulum = "^3.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.0"
+pytest = "^8.0.0"
 
 [build-system]
 requires = ["poetry-core"]
