@@ -15,7 +15,7 @@ TELEGRAM_BOT_TOKEN = str(os.environ["TELEGRAM_BOT_TOKEN"])
 TELEGRAM_API_ID = str(os.environ["TELEGRAM_API_ID"])
 TELEGRAM_API_HASH = str(os.environ["TELEGRAM_API_HASH"])
 
-ADMIN = str(os.environ["ADMIN"])
+ADMIN = int(os.environ["ADMIN"])
 
 FUN_CHANNELS = load_env_list("FUN_CHANNELS")
 NEWS_CHANNELS = load_env_list("NEWS_CHANNELS")
