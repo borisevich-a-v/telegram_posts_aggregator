@@ -1,50 +1,35 @@
-from asyncio import Queue, QueueEmpty
+from asyncio import QueueEmpty
 
 from loguru import logger
 from telethon import events
 
 from .config import ADMIN, AGGREGATOR_CHANNEL, FUN_CHANNELS, NEWS_CHANNELS
+from .posts_storage import PostQueue
 
-new_posts: Queue = Queue()
-
-
-def get_next_post():
-    try:
-        return new_posts.get_nowait()
-    except QueueEmpty:
-        return None
+queue = PostQueue()
 
 
 @events.register(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
 async def public_channel_listener(event):
-    logger.info(f"New message from `{event.message.chat.title}`")
+    """
+    This handler just forward messages to the aggregation channel. For some reason bot can't access some
+     posts from other public channel.
+    """
+    logger.info(event)
+    logger.info(event.message)
     await event.client.forward_messages(AGGREGATOR_CHANNEL, event.message)
 
 
 @events.register(events.NewMessage(chats=AGGREGATOR_CHANNEL))
 async def aggregator_channel_listener(event):
-    """
-    This handler listen aggregation channel. For some reason bot can't access some posts
-    from other public channel
-    """
-    logger.debug(f"Put message {event.message}")
-    await new_posts.put(event.message)
-    logger.debug(f"Message have been put")
+    await queue.put(event.message)
 
 
-@events.register(events.NewMessage(pattern="/next"))
+@events.register(events.NewMessage(pattern="/next", from_users=ADMIN))
 async def handle_next_command(event):
-    sender = await event.get_sender()
-    if sender.username != ADMIN:
-        logger.warning("No admin user tries to get a message")
-        return
-
-    if msg := get_next_post():
-        logger.debug(f"Sending new content to a {sender.username}")
+    try:
+        msg = queue.get_nowait()
         logger.debug(f"Content {msg}")
-
-        await event.client.forward_messages(sender, msg)
-
-    else:
-        logger.debug("Sending `no updates`")
+        await event.client.forward_messages(ADMIN, msg)
+    except QueueEmpty:
         await event.reply("No updates")
