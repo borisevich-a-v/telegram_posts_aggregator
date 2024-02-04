@@ -1,4 +1,4 @@
-from pendulum import time, duration
+from pendulum import duration, time
 
 
 class TimeRange:
