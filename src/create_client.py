@@ -1,11 +1,12 @@
 from loguru import logger
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 
-from .config import AGGREGATOR_CHANNEL, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from .config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
 
 
 def create_client() -> TelegramClient:
-    client = TelegramClient("ChannelParser", TELEGRAM_API_ID, TELEGRAM_API_HASH)
+    client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
     @client.on(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
     async def public_channel_listener(event):
