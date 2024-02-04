@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - dev
+
 env:
   REGISTRY: docker.io
   IMAGE_NAME: tinker000/${{ github.event.repository.name }}

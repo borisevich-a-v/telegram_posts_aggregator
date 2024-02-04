@@ -1,6 +1,6 @@
 ## MVP:
 - [x] CI
-- [ ] CD
+- [x] CD
 - [ ] Deploy
 - [ ] Add tests for current version of Warden
 
