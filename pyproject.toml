@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["andrei_borisevich <andreyborisevichleti@gmail.com>"]
 readme = "README.md"
-packages = [{include = "telegram_posts_aggregator"}]
+packages = [{ include = "telegram_posts_aggregator" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -21,3 +21,7 @@ pytest = "^8.0.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths="tests"
