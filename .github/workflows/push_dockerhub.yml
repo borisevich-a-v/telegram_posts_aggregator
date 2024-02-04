@@ -1,26 +1,28 @@
 name: Build and Push Docker Image to DockerHub
 
 on:
-  pull_request:
   push:
     branches:
       - master
-
+      - dev
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: tinker000/${{ github.event.repository.name }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Build the Docker image
+      - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Build the Docker image
         run: docker-compose build --no-cache --force-rm
 
   test:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -28,9 +30,12 @@ jobs:
       - name: Test the Docker image
         run: docker-compose up -d
 
+
+
   push_to_registry:
     name: Push Docker image to docker hub
     runs-on: ubuntu-latest
+    needs: [build, test]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
