@@ -1,6 +1,10 @@
-name: Unit tests and linters
+name: Unit tests
 
-on: [ pull_request ]
+on:
+  pull_request:
+  push:
+      branches:
+        - master
 
 jobs:
   build:
@@ -31,7 +35,7 @@ jobs:
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
 
-      - name: Load cached venv (if exists)
+      - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
