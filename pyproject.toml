@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["andrei_borisevich <andreyborisevichleti@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "telegram_posts_aggregator" }]
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
