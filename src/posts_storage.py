@@ -7,7 +7,7 @@ MESSAGE_GROUP_ID = int
 
 class PostQueue:
     """
-    Put messages and group of messages into an async queue.
+    Async queue that gather grouped messages into one queue message
     """
 
     def __init__(self) -> None:
@@ -32,7 +32,10 @@ class PostQueue:
         await self._queue.put(grouped_id)
 
     def get_nowait(self) -> list[Message]:
-        """Return list of messages with the same `grouped_id` or raise `QueueEmpty` if the queue is empty"""
+        """
+        Return list of messages with the same `grouped_id` or raise `QueueEmpty` if the queue is empty
+            Raises: QueueEmpty
+        """
         queue_obj = self._queue.get_nowait()
         if isinstance(queue_obj, Message):
             return [queue_obj]
