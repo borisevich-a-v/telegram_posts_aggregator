@@ -15,11 +15,13 @@ def create_bot(queue: PostQueue) -> TelegramClient:
 
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event):
-        await queue.put(event.message)
+        if hasattr(event, "message"):
+            await queue.put(event.message)
+        else:
+            logger.critical("No message", event)
 
     @bot.on(events.NewMessage(pattern="/next", from_users=ADMIN))
     async def handle_next_command(event):
-
         try:
             msg = queue.get_nowait()
             await event.client.forward_messages(ADMIN, msg)

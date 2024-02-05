@@ -1,10 +1,12 @@
 ## MVP:
 - [x] CI
 - [x] CD
-- [ ] Deploy
-- [ ] Add tests for current version of Warden
+- [x] Deploy
+- [x] Send grouped images together
 
-## Part 2
+## Improvements
+- [ ] Bug: grouped messages processed several times
+- [ ] Add Warden
 - [ ] Move channel lists from env to database
 - [ ] Save channels interactively
 - [ ] Split channels into categories
