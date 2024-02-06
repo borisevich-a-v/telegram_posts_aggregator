@@ -10,7 +10,7 @@ def create_client() -> TelegramClient:
 
     @client.on(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
     @client.on(events.Album(chats=FUN_CHANNELS + NEWS_CHANNELS))
-    async def public_channel_listener(event):
+    async def public_channel_listener(event) -> None:
         """
         This handler just forward messages to the aggregation channel.
         The bot can't access some posts from other public channel, so we forward posts to the place where bot can
