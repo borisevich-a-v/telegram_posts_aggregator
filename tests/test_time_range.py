@@ -6,7 +6,7 @@ from src.warden.time_range import TimeRange
 
 def test_start_equal_end_time():
     with pytest.raises(ValueError):
-        TimeRange(now(), now())
+        TimeRange(time(1), time(1))
 
 
 def test_contains_within_day():
