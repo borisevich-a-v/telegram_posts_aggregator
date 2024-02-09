@@ -3,9 +3,10 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 from .config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from .registered_messages import RegisteredMessages
 
 
-def create_client() -> TelegramClient:
+def create_client(registered_messages: RegisteredMessages) -> TelegramClient:
     client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
     @client.on(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
@@ -17,9 +18,20 @@ def create_client() -> TelegramClient:
         access them.
         """
         if hasattr(event, "messages") and event.grouped_id:
+            if all(msg in registered_messages for msg in event.messages):
+                logger.info("Event is already processed")
+                return
+
+            registered_messages.update(event.messages)
             await event.forward_to(AGGREGATOR_CHANNEL)
             logger.info(f"Got new post {[m.id for m in event.messages]} and have added it to the aggregation channel")
+
         if hasattr(event, "message") and not event.grouped_id:
+            if event.message in registered_messages:
+                logger.info("Event is already processed")
+                return
+
+            registered_messages.add(event.message)
             await event.forward_to(AGGREGATOR_CHANNEL)
             logger.info(f"Got new post {event.message.id} and have added it to the aggregation channel")
 
