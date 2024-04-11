@@ -9,6 +9,7 @@ from src.posts_storage import PostQueue
 
 
 def create_bot(queue: PostQueue) -> TelegramClient:
+    logger.info("Creating bot")
     bot = TelegramClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(
         bot_token=TELEGRAM_BOT_TOKEN
     )
