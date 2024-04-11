@@ -1,47 +1,61 @@
-from pendulum import datetime, duration, now, time
+import abc
 
-from .time_range import TimeRange
+from pendulum import WeekDay, datetime, now, time, today
+
+from src.warden.time_range import TimeRange
+
+WORKING_DAYS = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY, WeekDay.FRIDAY
 
 
-class NotAllowed(Exception):  # Choose better name
-    ...
+class NotAllowed(Exception):
+    """Raised if news check is not allowed to a user."""
+
+
+class IRule(abc.ABC):
+    """Raise an `NotAllowed` exception in case of check has failed"""
+
+    @abc.abstractmethod
+    def check(self, checked_time: datetime) -> None: ...
+
+
+class Rule8to11EveryDay(IRule):
+    FORBIDDEN_TIME = TimeRange(time(8), time(11))
+
+    def check(self, checked_time: datetime) -> None:
+        if checked_time in self.FORBIDDEN_TIME:
+            raise NotAllowed("The rule does not allow you to ask for posts. (8am-11am every day)")
+
+
+class Rule11to12Workdays(IRule):
+    FORBIDDEN_TIME: TimeRange = TimeRange(time(11), time(12))
+    FORBIDDEN_DAYS: tuple[WeekDay, ...] = WORKING_DAYS
+
+    def check(self, checked_time: datetime) -> None:
+        if today().day_of_week in self.FORBIDDEN_DAYS:
+            if checked_time in self.FORBIDDEN_TIME:
+                raise NotAllowed("The rule does not allow you to ask for posts. (11am-12pm workdays)")
+
+
+class RuleSleepTimeMonTue(IRule):
+    # To be implemented
+    def check(self, checked_time: datetime) -> None: ...
+
+
+class RuleLimitAccessInWorkingHours(IRule):
+    # To be implemented
+    def check(self, checked_time: datetime) -> None: ...
 
 
 class Warden:
-    def __init__(self):
-        self.interactions: list[datetime] = []
+    RULES = [
+        Rule8to11EveryDay,
+        Rule11to12Workdays,
+    ]
 
-        # Pay attention for time zones
-        self.forbidden_time = TimeRange(time(8), time(11))  # it's okay to set up Warden in the init for now
-        self.limited_time = TimeRange(time(11), time(18))
+    def __init__(self):
+        self._rules: list[IRule] = [rule() for rule in self.RULES]
 
     def check_allowance(self) -> None:
-        self.add_new_interaction()
-
-        current_time = now()
-
-        # You are right! Make checks as a separate classes with a standardized interface. Let's do it proper
-        self.check_1(current_time)
-        self.check_2(current_time)
-
-    def check_1(self, current_time):  # todo choose better name
-        if current_time in self.forbidden_time:
-            # raise NotAllowed("Forbidden time")
-            ...
-
-    def check_2(self, current_time):
-        # maximum five posts in 30 minutes in limited time
-        if current_time in self.limited_time:
-            if len(self.interactions) < 5:
-                ...
-
-            last_30_min = TimeRange(now().time() - duration(minutes=30), now().time())
-            for interaction in self.interactions[-5:]:
-                if interaction not in last_30_min:
-                    ...
-
-    def add_new_interaction(self) -> None:
-        # TODO: do it somehow smartly
-        if len(self.interactions) > 2_000:
-            self.interactions = self.interactions[-500:]
-        self.interactions.append(now())
+        current_time = now().time()
+        for rule in self._rules:
+            rule.check(current_time)
