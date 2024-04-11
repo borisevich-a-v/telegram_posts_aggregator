@@ -8,7 +8,7 @@ class MessageUniqueKey(NamedTuple):
     message_id: int
 
 
-class RegisteredMessages:
+class MessagesRegister:
     MIN_NUMBER_OF_STORED_MESSAGE_IDS = 50
 
     def __init__(self):

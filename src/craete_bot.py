@@ -4,15 +4,13 @@ from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
-from src.config import ADMIN, AGGREGATOR_CHANNEL, BOT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
+from src.config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
 from src.posts_storage import PostQueue
 
 
 def create_bot(queue: PostQueue) -> TelegramClient:
     logger.info("Creating bot")
-    bot = TelegramClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(
-        bot_token=TELEGRAM_BOT_TOKEN
-    )
+    bot = TelegramClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(bot_token=TELEGRAM_BOT_TOKEN)
 
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event):
