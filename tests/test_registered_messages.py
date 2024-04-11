@@ -2,7 +2,7 @@ from copy import deepcopy
 from random import randint
 from unittest import mock
 
-from src.registered_messages import RegisteredMessages
+from src.registered_messages import MessagesRegister
 
 
 def get_test_messages(number: int) -> list[mock.Mock]:
@@ -24,7 +24,7 @@ def get_test_message_with_id(id_: int, peer_id: int = 0) -> mock.Mock:
 
 def test_contains_same_peer_id():
     message = get_test_message_with_id(42)
-    registered_messages = RegisteredMessages()
+    registered_messages = MessagesRegister()
 
     registered_messages.add(message)
 
@@ -35,7 +35,7 @@ def test_contains_same_peer_id():
 def test_contains_same_id_different_peer_id():
     message_1 = get_test_message_with_id(42, 1)
     message_2 = get_test_message_with_id(42, 2)
-    registered_messages = RegisteredMessages()
+    registered_messages = MessagesRegister()
 
     registered_messages.add(message_1)
 
@@ -46,7 +46,7 @@ def test_contains_same_id_different_peer_id():
 def test_add_message():
     message = get_test_message_with_id(42)
 
-    registered_messages = RegisteredMessages()
+    registered_messages = MessagesRegister()
 
     registered_messages.add(message)
 
@@ -58,7 +58,7 @@ def test_update():
 
     message_1, message_2, message_3 = deepcopy(messages)
 
-    registered_messages = RegisteredMessages()
+    registered_messages = MessagesRegister()
 
     registered_messages.update(messages)
 
@@ -71,12 +71,12 @@ def test_rotation():
     """
     Test that we store at least `MIN_NUMBER_OF_STORED_MESSAGE_IDS` and at most `2*MIN_NUMBER_OF_STORED_MESSAGE_IDS`
     """
-    rotation_threshold = RegisteredMessages.MIN_NUMBER_OF_STORED_MESSAGE_IDS
+    rotation_threshold = MessagesRegister.MIN_NUMBER_OF_STORED_MESSAGE_IDS
 
     message_1 = get_test_message_with_id(1 * 10**7)
     message_2 = get_test_message_with_id(2 * 10**7)
 
-    registered_messages = RegisteredMessages()
+    registered_messages = MessagesRegister()
 
     registered_messages.add(message_1)
     registered_messages.update(get_test_messages(rotation_threshold - 2))
