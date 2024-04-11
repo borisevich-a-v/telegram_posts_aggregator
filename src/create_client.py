@@ -7,6 +7,7 @@ from .registered_messages import RegisteredMessages
 
 
 def create_client(registered_messages: RegisteredMessages) -> TelegramClient:
+    logger.info("Creating client")
     client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
     @client.on(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
@@ -19,7 +20,7 @@ def create_client(registered_messages: RegisteredMessages) -> TelegramClient:
         """
         if hasattr(event, "messages") and event.grouped_id:
             if all(msg in registered_messages for msg in event.messages):
-                logger.info("Event is already processed")
+                logger.info("Event (album) is already processed")
                 return
 
             registered_messages.update(event.messages)
@@ -28,7 +29,7 @@ def create_client(registered_messages: RegisteredMessages) -> TelegramClient:
 
         if hasattr(event, "message") and not event.grouped_id:
             if event.message in registered_messages:
-                logger.info("Event is already processed")
+                logger.info("Event (message) is already processed")
                 return
 
             registered_messages.add(event.message)
