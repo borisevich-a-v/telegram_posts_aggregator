@@ -2,6 +2,11 @@ from pendulum import duration, time
 
 
 class TimeRange:
+    """
+    This class stores time range, regardless a date.
+    So if `start` is 4pm and `end` is 11am, then `__contains__` will return True for 6 pm and 3 am, but False for 1 pm.
+    """
+
     def __init__(self, start: time, end: time) -> None:
         self.start = start
         self.end = end
