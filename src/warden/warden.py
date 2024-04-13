@@ -64,9 +64,9 @@ class RuleLimitAccessInProductiveHours(IRule):
             return
 
         self._remove_old_accesses(current)
-        self.last_access_times.append(current)
-        if len(self.last_access_times) > self.ALLOWED_POSTS_NUMBER:
+        if len(self.last_access_times) >= self.ALLOWED_POSTS_NUMBER:
             raise NotAllowed("You are asking for new posts too often. (12pm-18pm mo more than 20 posts in 30 min)")
+        self.last_access_times.append(current)
 
 
 class Warden:

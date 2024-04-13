@@ -2,8 +2,8 @@ from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
-from .config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
-from .registered_messages import MessagesRegister
+from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from registered_messages import MessagesRegister
 
 
 def create_client(registered_messages: MessagesRegister) -> TelegramClient:
