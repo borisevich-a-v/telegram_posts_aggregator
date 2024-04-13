@@ -20,21 +20,30 @@ def create_bot(queue: PostQueue, warden: Warden) -> TelegramClient:
         else:
             logger.critical("No message", event)
 
-    @bot.on(events.NewMessage(pattern="/next", from_users=ADMIN))
+    @bot.on(events.NewMessage(pattern="/next.*", from_users=ADMIN))
     async def handle_next_command(event) -> None:
-        logger.info("Got `/next` request from Admin")
-        try:
-            warden.check_allowance()
-        except NotAllowed as exp:
-            logger.info("User is not allowed to read a new message %s", str(exp))
-            await event.reply(str(exp))
-            return
+        logger.info(f"Got {event.pattern_match} request from Admin")
 
         try:
-            msg = queue.get_nowait()
-            await event.client.forward_messages(ADMIN, msg)
-        except QueueEmpty:
-            await event.reply("No updates")
+            amount = int(event.pattern_match.group(0).lstrip("/next") or "1")
+        except (ValueError, IndexError) as exp:
+            await event.reply(f"Bad request format: {exp}")
+            return
+
+        for i in range(amount):
+            try:
+                warden.check_allowance()
+            except NotAllowed as exp:
+                logger.info("User is not allowed to read a new message %s", str(exp))
+                await event.reply(str(exp))
+                return
+
+            try:
+                msg = queue.get_nowait()
+                await event.client.forward_messages(ADMIN, msg)
+            except QueueEmpty:
+                await event.reply("No updates")
+                return
 
     bot.start()
     logger.info("Bot has been initialized")
