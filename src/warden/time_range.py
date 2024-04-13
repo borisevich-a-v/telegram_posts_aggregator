@@ -15,9 +15,9 @@ class TimeRange:
 
     def __contains__(self, checked_time: time) -> bool:
         if self.start < self.end:
-            if self.start < checked_time < self.end:
+            if self.start <= checked_time <= self.end:
                 return True
         else:
-            if self.start < checked_time or self.end > checked_time:
+            if self.start <= checked_time or self.end >= checked_time:
                 return True
         return False
