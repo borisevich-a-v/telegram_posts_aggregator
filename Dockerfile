@@ -8,4 +8,4 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install
 
 COPY . .
-CMD poetry run python -m src
+CMD poetry run python src/__main__.py
