@@ -1,16 +1,16 @@
 from loguru import logger
 
-from craete_bot import create_bot
-from create_client import create_client
-from posts_storage import PostQueue
-from registered_messages import MessagesRegister
-from warden.warden import Warden
+from bot.craete_bot import create_bot
+from bot.posts_storage import PostQueue
+from bot.warden.warden import Warden
+from telegram_agent.create_agent import create_telegram_agent
+from telegram_agent.registered_messages import MessagesRegister
 
 if __name__ == "__main__":
     logger.info("Starting application...")
 
-    client = create_client(MessagesRegister())
+    agent = create_telegram_agent(MessagesRegister())
     bot = create_bot(PostQueue(), Warden())
 
     # run the infinite loop
-    client.run_until_disconnected()
+    agent.run_until_disconnected()
