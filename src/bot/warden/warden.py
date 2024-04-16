@@ -3,7 +3,8 @@ import abc
 from pendulum import DateTime, WeekDay, now, time
 
 from config import USER_TIME_ZONE
-from warden.time_range import TimeRange
+
+from .time_range import TimeRange
 
 WORKING_DAYS = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY, WeekDay.FRIDAY
 
