@@ -3,7 +3,13 @@ from unittest.mock import Mock
 import pytest
 from pendulum import DateTime, Timezone
 
-from warden.warden import NotAllowed, Rule8to11EveryDay, Rule11to12Workdays, RuleLimitAccessInProductiveHours, Warden
+from bot.warden.warden import (
+    NotAllowed,
+    Rule8to11EveryDay,
+    Rule11to12Workdays,
+    RuleLimitAccessInProductiveHours,
+    Warden,
+)
 
 
 def get_datetime_with_specific_time(hour, minute=0, second=0) -> DateTime:

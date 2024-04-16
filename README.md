@@ -2,6 +2,9 @@
 Aggregate posts from several channels and send it via bot according the rules.
 
 
+## Install dependencies
+In the project [Poetry](https://python-poetry.org/) is used. Set up the project using [poetry guide](https://python-poetry.org/docs/basic-usage/#initialising-a-pre-existing-project)
+
 ## Setup environment
 Create a .env file and fill in all required variables (see .env.example)
 1. Create a bot in BotFather and fill in TELEGRAM_BOT_TOKEN
@@ -15,3 +18,8 @@ Create a .env file and fill in all required variables (see .env.example)
 docker compose build
 docker compose up
 ```
+
+### Run unit tests
+You can choose any approach to run unit tests. We provide here two of them. <br>
+**Approach 1 (terminal):** run `python -m pytest tests` in your terminal from the source root. <br>
+**Approach 2 (PyCharm):** [read here](https://www.jetbrains.com/help/pycharm/testing.html)
