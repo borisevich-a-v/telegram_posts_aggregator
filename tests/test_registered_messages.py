@@ -2,7 +2,7 @@ from copy import deepcopy
 from random import randint
 from unittest import mock
 
-from registered_messages import MessagesRegister
+from telegram_agent.registered_messages import MessagesRegister
 
 
 def get_test_messages(number: int) -> list[mock.Mock]:

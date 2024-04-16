@@ -3,11 +3,12 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
-from registered_messages import MessagesRegister
+
+from .registered_messages import MessagesRegister
 
 
-def create_client(registered_messages: MessagesRegister) -> TelegramClient:
-    logger.info("Creating client")
+def create_telegram_agent(registered_messages: MessagesRegister) -> TelegramClient:
+    logger.info("Creating telegram agent")
     client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
     @client.on(events.NewMessage(chats=FUN_CHANNELS + NEWS_CHANNELS))
