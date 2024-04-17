@@ -7,6 +7,7 @@ from bot.warden.warden import (
     NotAllowed,
     Rule8to11EveryDay,
     Rule11to12Workdays,
+    RuleSleepTimeMonTue,
     RuleLimitAccessInProductiveHours,
     Warden,
 )
@@ -20,6 +21,7 @@ def test_warden_rules_list():
     expected_rules = {
         Rule8to11EveryDay,
         Rule11to12Workdays,
+        RuleSleepTimeMonTue,
         RuleLimitAccessInProductiveHours,
     }
     assert expected_rules == set(Warden.RULES)
