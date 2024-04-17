@@ -3,12 +3,12 @@ from unittest.mock import Mock
 import pytest
 from pendulum import DateTime, Timezone
 
-from bot.warden.warden import (
+from src.bot.warden.warden import (
     NotAllowed,
     Rule8to11EveryDay,
     Rule11to12Workdays,
-    RuleSleepTimeMonTue,
     RuleLimitAccessInProductiveHours,
+    RuleSleepTimeMonTue,
     Warden,
 )
 
@@ -150,3 +150,17 @@ def test_rule_rule_limit_access_in_working_hours_negative():
     with pytest.raises(NotAllowed):
         for i in range(allowed_posts_number + 1):
             rule.check(get_datetime_with_specific_time(hour=12, second=i + 1))
+
+
+@pytest.mark.parametrize("day", [8, 9])
+def test_rule_RuleSleepTimeMonTue_day(day):
+    rule = RuleSleepTimeMonTue()
+    with pytest.raises(NotAllowed):
+        rule.check(DateTime(year=2024, month=4, day=day, hour=23, minute=30))
+
+
+@pytest.mark.parametrize("hour", [23, 00])
+def test_rule_RuleSleepTimeMonTue_time(hour):
+    rule = RuleSleepTimeMonTue()
+    with pytest.raises(NotAllowed):
+        rule.check(DateTime(year=2024, month=4, day=15, hour=hour, minute=30))

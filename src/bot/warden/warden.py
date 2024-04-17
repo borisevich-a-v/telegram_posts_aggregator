@@ -40,7 +40,7 @@ class Rule11to12Workdays(IRule):
 
 class RuleSleepTimeMonTue(IRule):
     FORBIDDEN_TIME = TimeRange(time(23), time(8))
-    FORBIDDEN_DAYS: WORKING_DAYS[:2] = WORKING_DAYS
+    FORBIDDEN_DAYS: tuple[WeekDay, ...] = WORKING_DAYS[:2]
 
     def check(self, current: DateTime) -> None:
         if current.day_of_week in self.FORBIDDEN_DAYS:
