@@ -7,8 +7,8 @@ from bot.warden.warden import (
     NotAllowed,
     Rule8to11EveryDay,
     Rule11to12Workdays,
-    RuleSleepTimeMonTue,
     RuleLimitAccessInProductiveHours,
+    RuleSleepTimeMonTue,
     Warden,
 )
 
