@@ -152,8 +152,14 @@ def test_rule_rule_limit_access_in_working_hours_negative():
             rule.check(get_datetime_with_specific_time(hour=12, second=i + 1))
 
 
-@pytest.mark.parametrize("day, hour", [(8, 23), (9, 00)])
-def test_rule_RuleSleepTimeMonTue_day(day, hour):
+@pytest.mark.parametrize("day, hour", [(8, 23), (9, 00), (10, 2), (11, 3)])
+def test_rule_rule_sleep_time_mon_thur_day_negative(day, hour):
     rule = RuleSleepTimeMonTue()
     with pytest.raises(NotAllowed):
         rule.check(DateTime(year=2024, month=4, day=day, hour=hour, minute=30))
+
+
+@pytest.mark.parametrize("day, hour", [(12, 23), (13, 2), (14, 12), (15, 22)])
+def test_rule_rule_sleep_time_mon_thur_day_positive(day, hour):
+    rule = RuleSleepTimeMonTue()
+    rule.check(DateTime(year=2024, month=4, day=day, hour=hour, minute=30))
