@@ -38,7 +38,7 @@ class Rule11to12Workdays(IRule):
                 raise NotAllowed("The rule does not allow you to ask for posts. (11am-12pm workdays)")
 
 
-class RuleSleepTimeMonTue(IRule):
+class RuleSleepTimeMonThu(IRule):
     FORBIDDEN_TIME = TimeRange(time(23), time(8))
     FORBIDDEN_DAYS: tuple[WeekDay, ...] = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY
 
@@ -79,7 +79,7 @@ class Warden:
     RULES = [
         Rule8to11EveryDay,
         Rule11to12Workdays,
-        RuleSleepTimeMonTue,
+        RuleSleepTimeMonThu,
         RuleLimitAccessInProductiveHours,
     ]
 
