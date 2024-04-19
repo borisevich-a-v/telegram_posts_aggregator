@@ -7,7 +7,6 @@ from config import USER_TIME_ZONE
 from .time_range import TimeRange
 
 WORKING_DAYS = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY, WeekDay.FRIDAY
-FIRST_FOUR_DAYS_WEEKS = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY
 
 
 class NotAllowed(Exception):
@@ -41,7 +40,7 @@ class Rule11to12Workdays(IRule):
 
 class RuleSleepTimeMonTue(IRule):
     FORBIDDEN_TIME = TimeRange(time(23), time(8))
-    FORBIDDEN_DAYS: tuple[WeekDay, ...] = FIRST_FOUR_DAYS_WEEKS
+    FORBIDDEN_DAYS: tuple[WeekDay, ...] = WeekDay.MONDAY, WeekDay.TUESDAY, WeekDay.WEDNESDAY, WeekDay.THURSDAY
 
     def check(self, current: DateTime) -> None:
         if current.day_of_week in self.FORBIDDEN_DAYS:
