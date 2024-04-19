@@ -8,7 +8,7 @@ from bot.warden.warden import (
     Rule8to11EveryDay,
     Rule11to12Workdays,
     RuleLimitAccessInProductiveHours,
-    RuleSleepTimeMonTue,
+    RuleSleepTimeMonThu,
     Warden,
 )
 
@@ -21,7 +21,7 @@ def test_warden_rules_list():
     expected_rules = {
         Rule8to11EveryDay,
         Rule11to12Workdays,
-        RuleSleepTimeMonTue,
+        RuleSleepTimeMonThu,
         RuleLimitAccessInProductiveHours,
     }
     assert expected_rules == set(Warden.RULES)
@@ -154,12 +154,12 @@ def test_rule_rule_limit_access_in_working_hours_negative():
 
 @pytest.mark.parametrize("day, hour", [(8, 23), (9, 00), (10, 2), (11, 3)])
 def test_rule_rule_sleep_time_mon_thur_day_negative(day, hour):
-    rule = RuleSleepTimeMonTue()
+    rule = RuleSleepTimeMonThu()
     with pytest.raises(NotAllowed):
         rule.check(DateTime(year=2024, month=4, day=day, hour=hour, minute=30))
 
 
 @pytest.mark.parametrize("day, hour", [(12, 23), (13, 2), (14, 12), (15, 22)])
 def test_rule_rule_sleep_time_mon_thur_day_positive(day, hour):
-    rule = RuleSleepTimeMonTue()
+    rule = RuleSleepTimeMonThu()
     rule.check(DateTime(year=2024, month=4, day=day, hour=hour, minute=30))
