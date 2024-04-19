@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from pendulum import DateTime, Timezone
 
-from src.bot.warden.warden import (
+from bot.warden.warden import (
     NotAllowed,
     Rule8to11EveryDay,
     Rule11to12Workdays,
