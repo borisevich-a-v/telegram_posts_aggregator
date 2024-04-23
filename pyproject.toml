@@ -12,6 +12,9 @@ telethon = "^1.33.1"
 python-dotenv = "^1.0.1"
 loguru = "^0.7.2"
 pendulum = "^3.0.0"
+sqlalchemy = "^2.0.29"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.13.1"
 
 
 [tool.poetry.group.dev.dependencies]
