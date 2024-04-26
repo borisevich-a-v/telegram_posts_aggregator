@@ -7,7 +7,7 @@ services:
     volumes:
       - "./:/app"
     networks:
-      - localstack-network
+      - local-network
 
   postgres:
     image: postgres:16.2
@@ -21,11 +21,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - localstack-network
+      - local-network
 
 volumes:
   postgres-data:
 
 networks:
-  localstack-network:
-    name: localstack-network
+  local-network:
+    name: local-network

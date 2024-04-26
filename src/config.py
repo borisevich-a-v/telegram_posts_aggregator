@@ -17,6 +17,7 @@ TELEGRAM_API_ID = str(os.environ.get("TELEGRAM_API_ID"))
 TELEGRAM_API_HASH = str(os.environ.get("TELEGRAM_API_HASH"))
 
 CLIENT_SESSION = str(os.environ.get("CLIENT_SESSION"))
+DB_CONNECTION_STRING = str(os.environ.get("DB_CONNECTION_STRING"))
 
 ADMIN = int(os.environ.get("ADMIN", 0))
 
