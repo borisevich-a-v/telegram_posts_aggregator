@@ -1,5 +1,6 @@
 from typing import Iterable, NamedTuple
 
+from loguru import logger
 from telethon.tl.types import Message, TypePeer
 
 
@@ -12,6 +13,7 @@ class MessagesRegister:
     MIN_NUMBER_OF_STORED_MESSAGE_IDS = 50
 
     def __init__(self):
+        logger.info("Message register is initializing")
         self.last_messages_sets: list[set[MessageUniqueKey]] = [set(), set()]
 
     def add(self, message: Message) -> None:
