@@ -55,3 +55,7 @@ docker compose up
 You can choose any approach to run unit tests. We provide here two of them. <br>
 **Approach 1 (terminal):** run `python -m pytest tests` in your terminal from the source root. <br>
 **Approach 2 (PyCharm):** [read here](https://www.jetbrains.com/help/pycharm/testing.html)
+
+
+## Troubleshooting
+If you have got ```Server sent a very new message with ID ``` when initializing the project, try to refresh your session
