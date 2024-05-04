@@ -1,23 +1,21 @@
-from asyncio import QueueEmpty
-
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 from config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
 
-from .posts_storage import PostQueue
+from .posts_storage import NoNewPosts, PostStorage
 from .warden.warden import NotAllowed, Warden
 
 
-def create_bot(queue: PostQueue, warden: Warden) -> TelegramClient:
+def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
     logger.info("Creating bot")
     bot = TelegramClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(bot_token=TELEGRAM_BOT_TOKEN)
 
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event) -> None:
         if hasattr(event, "message"):
-            await queue.put(event.message)
+            post_storage.post(event.message)
         else:
             logger.critical("No message", event)
 
@@ -32,6 +30,7 @@ def create_bot(queue: PostQueue, warden: Warden) -> TelegramClient:
             return
 
         for i in range(amount):
+
             try:
                 warden.check_allowance()
             except NotAllowed as exp:
@@ -40,9 +39,10 @@ def create_bot(queue: PostQueue, warden: Warden) -> TelegramClient:
                 return
 
             try:
-                msg = queue.get_nowait()
-                await event.client.forward_messages(ADMIN, msg)
-            except QueueEmpty:
+                msgs = post_storage.get_oldest_unsent_post()
+                await event.client.forward_messages(entity=ADMIN, messages=msgs, from_peer=AGGREGATOR_CHANNEL)
+                post_storage.set_sent_multiple(msgs)
+            except NoNewPosts:
                 await event.reply("No updates")
                 return
 
