@@ -10,7 +10,6 @@ Dockerfile
 .dockerignore
 
 # Virtual environment
-.env
 .venv/
 venv/
 

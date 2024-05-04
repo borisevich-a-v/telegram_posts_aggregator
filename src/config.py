@@ -2,8 +2,14 @@ import os
 
 import pendulum
 from dotenv import load_dotenv
+from loguru import logger
 
-load_dotenv()
+if os.environ.get("ENVIRONMENT") is None:
+    logger.info("Starting in a container")
+    load_dotenv(".env")
+elif os.environ.get("ENVIRONMENT") == "local":
+    logger.info("Starting locally")
+    load_dotenv(".env_local")
 
 LIST_DELIMITER = "|"
 
