@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer
+from sqlalchemy import BigInteger, Column, DateTime, Integer
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -9,7 +9,7 @@ class MessageModel(Base):
 
     id = Column(Integer, primary_key=True)
     message_id = Column(Integer, nullable=False)
-    grouped_id = Column(Integer, nullable=True)
+    grouped_id = Column(BigInteger, nullable=True)
     sent = Column(DateTime, nullable=True)
 
     def __repr__(self):
