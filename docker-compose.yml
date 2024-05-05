@@ -3,11 +3,14 @@ version: "3.9"
 services:
   app:
     build: .
+    image: post_aggregator
     restart: on-failure
     volumes:
       - "./:/app"
+    command: poetry run python src/__main__.py
     networks:
       - local-network
+
 
   postgres:
     image: postgres:16.2
@@ -22,6 +25,17 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - local-network
+
+
+  migration:
+    image: post_aggregator
+    depends_on:
+      - app
+      - postgres
+    command: alembic upgrade head
+    networks:
+      - local-network
+
 
 volumes:
   postgres-data:
