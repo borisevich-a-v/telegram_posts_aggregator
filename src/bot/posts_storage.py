@@ -4,7 +4,7 @@ from loguru import logger
 from sqlalchemy import func
 from telethon.tl.types import Message
 
-from models import MessageModel
+from models import ChannelsModel, MessageModel
 
 MESSAGE_ID = int
 
@@ -20,7 +20,18 @@ class PostStorage:
 
     def post(self, message: Message) -> None:
         with self.session_maker() as session:
-            session.add(MessageModel(message_id=message.id, grouped_id=message.grouped_id))
+            channel_id = message.fwd_from.from_id.channel_id
+            channel = session.query(ChannelsModel).filter_by(channel_id=channel_id).first()
+            if not channel:
+                channel = ChannelsModel(channel_id=channel_id)
+                session.add(channel)
+                session.commit()
+                logger.info(f"New channel added: {channel}")
+
+            message = MessageModel(
+                message_id=message.id, grouped_id=message.grouped_id, channel_id=channel_id, sent=message.date
+            )
+            session.add(message)
             logger.info("Commiting changes")
             session.commit()
 

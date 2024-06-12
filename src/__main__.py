@@ -2,7 +2,7 @@ from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from bot.craete_bot import create_bot
+from bot.create_bot import create_bot
 from bot.posts_storage import PostStorage
 from bot.warden.warden import Warden
 from config import DB_CONNECTION_STRING
