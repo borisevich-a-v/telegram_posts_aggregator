@@ -12,24 +12,27 @@ class ChannelType(Enum):
 
 
 class MessageModel(Base):
-    __tablename__ = "messages"
+    __tablename__ = "message"
 
     id = Column(Integer, primary_key=True)
     message_id = Column(Integer, nullable=False)
     grouped_id = Column(BigInteger, nullable=True)
-    channel_id = Column(BigInteger, ForeignKey("channels.channel_id"), nullable=True)
+    channel_id = Column(BigInteger, ForeignKey("channel.channel_id"), nullable=False)
     sent = Column(DateTime, nullable=True)
 
-    channel = relationship("ChannelsModel", back_populates="messages")
+    channel = relationship("ChannelModel", back_populates="message")
 
     def repr(self):
         return f"MessageModel({self.id, self.message_id, self.grouped_id, self.sent})"
 
 
-class ChannelsModel(Base):
-    __tablename__ = "channels"
+class ChannelModel(Base):
+    __tablename__ = "channel"
 
-    channel_id = Column(BigInteger, nullable=False, unique=True, primary_key=True)
+    channel_id = Column(BigInteger, primary_key=True)
     channel_type = Column(Integer, nullable=True)
 
     messages = relationship("MessageModel", back_populates="channel")
+
+    def repr(self):
+        return f"ChannelModel({self.channel_id, self.channel_type})"
