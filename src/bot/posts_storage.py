@@ -20,20 +20,19 @@ class PostStorage:
 
     def post(self, message: Message) -> None:
         with self.session_maker() as session:
-            channel_id = message.fwd_from.from_id.channel_id
-            channel = session.query(ChannelModel).filter_by(channel_id=channel_id).first()
-            if not channel:
-                channel = ChannelModel(channel_id=channel_id)
-                session.add(channel)
-                session.commit()
-                logger.info(f"New channel added: {channel}")
-
-            message = MessageModel(
-                message_id=message.id, grouped_id=message.grouped_id, channel_id=channel_id, sent=message.date
-            )
+            channel = self.get_or_create_channel(message.fwd_from.from_id.channel_id, session)
+            message = MessageModel(message_id=message.id, grouped_id=message.grouped_id, channel=channel)
             session.add(message)
-            logger.info("Commiting changes")
             session.commit()
+
+    def get_or_create_channel(self, channel_id: int, session) -> ChannelModel:
+        channel = session.query(ChannelModel).filter_by(channel_id=channel_id).first()
+        if not channel:
+            logger.info(f"Adding new channel...: {channel}")
+            channel = ChannelModel(channel_id=channel_id)
+            session.add(channel)
+            session.commit()
+        return channel
 
     def get_oldest_unsent_post(self) -> list[MESSAGE_ID]:
         # todo: should we use transactions here??
