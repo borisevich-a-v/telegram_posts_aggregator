@@ -20,9 +20,9 @@ class MessageModel(Base):
     channel_id = Column(BigInteger, ForeignKey("channel.channel_id"), nullable=False)
     sent = Column(DateTime, nullable=True)
 
-    channel = relationship("ChannelModel", back_populates="message")
+    channel = relationship("ChannelModel", back_populates="messages")
 
-    def repr(self):
+    def __repr__(self):
         return f"MessageModel({self.id, self.message_id, self.grouped_id, self.sent})"
 
 
@@ -34,5 +34,5 @@ class ChannelModel(Base):
 
     messages = relationship("MessageModel", back_populates="channel")
 
-    def repr(self):
+    def __repr__(self):
         return f"ChannelModel({self.channel_id, self.channel_type})"
