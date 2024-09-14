@@ -8,24 +8,26 @@ Aggregate posts from several channels and send it via bot according the rules.
 
 The project uses [Poetry](https://python-poetry.org/)  for dependency management. Please set up the project following the instructions in this [poetry guide](https://python-poetry.org/docs/basic-usage/#initialising-a-pre-existing-project).
 
-### Telegram entities
+### Set up Telegram entities
 
 To facilitate a smooth development process, it's recommended to have two Telegram accounts. One can be your primary
 private account and the other a test account. Due to Telegram's strict rules, it's strongly advised to treat the test
 account as temporary and be prepared for the possibility of it being permanently banned.
 
-Once you have both accounts set up, proceed to create a Telegram bot via BotFather at https://t.me/BotFather.
-And again, make sure that this account is not important for you, because Telegram often bans accounts with API
-development tools for absolutely no reason.
-
-After you have obtained two accounts, create telegram bot via BotFather https://t.me/BotFather
+Once you have both accounts set up, proceed to create a Telegram bot via BotFather at https://t.me/BotFather. You can
+connect the bot with you main account.
 
 After setting up the bot, create two new public channels: <br/>
 
-1. Aggregation channel: This channel should include at least your second account, the bot, and your main account, all of
-   whom should be administrators.
+1. Aggregation channel: This channel should include at least your second account, the bot, and your main account,
+   the bot and the second account should be administrators.
 2. Test channel (source channel): The bot should not be a member of this channel. This channel will serve to simulate a
    news channel.
+
+Now for your test account you have to create a new application https://my.telegram.org/apps. Keep in mind that telegram
+can ban this account for no reason.
+
+
 
 ### Environment variables
 
