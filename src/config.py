@@ -4,12 +4,16 @@ import pendulum
 from dotenv import load_dotenv
 from loguru import logger
 
-if os.environ.get("ENVIRONMENT") is None:
+if os.environ.get("ENVIRONMENT") == "container":
     logger.info("Starting in a container")
-    load_dotenv(".env")
-elif os.environ.get("ENVIRONMENT") == "local":
+    dot_env_found = load_dotenv(".env")
+else:
     logger.info("Starting locally")
-    load_dotenv(".env_local")
+    dot_env_found = load_dotenv(".env_local") or load_dotenv("../.env_local")
+
+if not dot_env_found:
+    raise FileNotFoundError("There is no .env file")
+
 
 LIST_DELIMITER = "|"
 
