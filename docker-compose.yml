@@ -35,6 +35,8 @@ services:
       - app
       - postgres
     command: alembic upgrade head
+    environment:
+      ENVIRONMENT: container
     networks:
       - local-network
 
