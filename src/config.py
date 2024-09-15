@@ -6,14 +6,10 @@ from loguru import logger
 
 if os.environ.get("ENVIRONMENT") == "container":
     logger.info("Starting in a container")
-    dot_env_found = load_dotenv(".env")
+    load_dotenv(".env")
 else:
     logger.info("Starting locally")
-    dot_env_found = load_dotenv(".env_local") or load_dotenv("../.env_local")
-
-if not dot_env_found:
-    raise FileNotFoundError("There is no .env file")
-
+    load_dotenv(".env_local") or load_dotenv("../.env_local")
 
 LIST_DELIMITER = "|"
 
