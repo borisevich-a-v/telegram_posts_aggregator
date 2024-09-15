@@ -8,6 +8,8 @@ services:
     volumes:
       - "./:/app"
     command: poetry run python src/__main__.py
+    environment:
+      ENVIRONMENT: container
     networks:
       - local-network
 
