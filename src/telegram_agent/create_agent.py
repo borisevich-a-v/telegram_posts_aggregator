@@ -11,8 +11,8 @@ def create_telegram_agent(registered_messages: MessagesRegister) -> TelegramClie
     logger.info("Creating telegram agent")
     client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
-    @client.on(events.NewMessage())
-    @client.on(events.Album())
+    @client.on(events.NewMessage(AGGREGATOR_CHANNEL, blacklist_chats=True))
+    @client.on(events.Album(AGGREGATOR_CHANNEL, blacklist_chats=True))
     async def public_channel_listener(event) -> None:
         """
         This handler just forward messages to the aggregation channel.
