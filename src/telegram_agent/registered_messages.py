@@ -12,7 +12,7 @@ class MessageUniqueKey(NamedTuple):
 class MessagesRegister:
     MIN_NUMBER_OF_STORED_MESSAGE_IDS = 50
 
-    def __init__(self):
+    def __init__(self) -> None:
         logger.info("Message register is initializing")
         self.last_messages_sets: list[set[MessageUniqueKey]] = [set(), set()]
 

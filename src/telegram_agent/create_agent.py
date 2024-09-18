@@ -2,14 +2,17 @@ from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
-from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, FUN_CHANNELS, NEWS_CHANNELS, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from telegram_slow_client import TelegramSlowClient
 
 from .registered_messages import MessagesRegister
 
 
 def create_telegram_agent(registered_messages: MessagesRegister) -> TelegramClient:
     logger.info("Creating telegram agent")
-    client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+    client = TelegramSlowClient(
+        StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=3
+    )
 
     @client.on(events.NewMessage(AGGREGATOR_CHANNEL, blacklist_chats=True))
     @client.on(events.Album(AGGREGATOR_CHANNEL, blacklist_chats=True))
@@ -26,7 +29,7 @@ def create_telegram_agent(registered_messages: MessagesRegister) -> TelegramClie
 
             registered_messages.update(event.messages)
             await event.forward_to(AGGREGATOR_CHANNEL)
-            logger.info(f"Got new post {[m.id for m in event.messages]} and have added it to the aggregation channel")
+            logger.info(f"Got a new post {[m.id for m in event.messages]} and have added it to the aggregation channel")
 
         if hasattr(event, "message") and not event.grouped_id:
             if event.message in registered_messages:
