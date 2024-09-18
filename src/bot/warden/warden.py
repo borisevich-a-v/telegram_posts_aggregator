@@ -1,4 +1,5 @@
 import abc
+from typing import Type
 
 from pendulum import DateTime, WeekDay, now, time
 
@@ -55,7 +56,7 @@ class RuleLimitAccessInProductiveHours(IRule):
     ALLOWED_POSTS_NUMBER = 20
     TIME_PERIOD = 30 * 60  # 30 minutes
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.last_access_times: list[DateTime] = []
 
     def _remove_old_accesses(self, current: DateTime):
@@ -76,15 +77,15 @@ class RuleLimitAccessInProductiveHours(IRule):
 
 
 class Warden:
-    RULES = [
+    RULES: list[Type[IRule]] = [
         Rule8to11EveryDay,
         Rule11to12Workdays,
         RuleSleepTimeMonThu,
         RuleLimitAccessInProductiveHours,
     ]
 
-    def __init__(self):
-        self._rules: list[IRule] = [rule() for rule in self.RULES]
+    def __init__(self) -> None:
+        self._rules = [rule() for rule in self.RULES]
 
     def check_allowance(self) -> None:
         current_datetime = now(tz=USER_TIME_ZONE)
