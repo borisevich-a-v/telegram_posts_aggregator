@@ -25,7 +25,7 @@ After setting up the bot, create two new public channels: <br/>
    news channel.
 
 Now for your test account you have to create a new application https://my.telegram.org/apps. Keep in mind that telegram
-can ban this account for no reason.
+can ban this account for no reason [GitHub issue](https://github.com/lonamiwebs/telethon/issues/824)
 
 
 
