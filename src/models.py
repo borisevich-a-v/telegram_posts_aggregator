@@ -15,10 +15,11 @@ class MessageModel(Base):
     __tablename__ = "message"
 
     id = Column(Integer, primary_key=True)
-    message_id = Column(Integer, nullable=False)
-    grouped_id = Column(BigInteger, nullable=True)
-    channel_id = Column(BigInteger, ForeignKey("channel.channel_id"), nullable=False)
-    sent = Column(DateTime, nullable=True)
+    message_id = Column(Integer, nullable=False)  # message id in the aggr channel
+    grouped_id = Column(BigInteger, nullable=True)  # grouped_id is a Telegram hack to group messages
+    channel_id = Column(BigInteger, ForeignKey("channel.channel_id"), nullable=False)  # source channel id
+    sent = Column(DateTime, nullable=True)  # have the message been sent to the user
+    original_message_id = Column(Integer, nullable=False)  # for deduplicate reposts
 
     channel = relationship("ChannelModel", back_populates="messages")
 

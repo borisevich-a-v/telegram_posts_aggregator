@@ -9,8 +9,9 @@ class MessageUniqueKey(NamedTuple):
     message_id: int
 
 
+# TODO: replace with database check
 class MessagesRegister:
-    MIN_NUMBER_OF_STORED_MESSAGE_IDS = 50
+    MIN_NUMBER_OF_STORED_MESSAGE_IDS = 100
 
     def __init__(self) -> None:
         logger.info("Message register is initializing")
