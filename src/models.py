@@ -2,15 +2,15 @@ from enum import Enum
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime
 from sqlalchemy import Enum as SQL_Enum
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
 
 class ChannelType(Enum):
-    FUN = 1
-    NEWS = 2
+    FUN = "fun"
+    NEWS = "news"
 
 
 class MessageModel(Base):
@@ -32,12 +32,13 @@ class ChannelModel(Base):
     __tablename__ = "channel"
 
     channel_id = Column(BigInteger, primary_key=True)
+    channel_name = Column(String, nullable=True)
     channel_type = Column(SQL_Enum(ChannelType), nullable=True)
 
     message = relationship("MessageModel", back_populates="channel")
 
     def repr(self):
-        return f"ChannelModel({self.channel_id, self.channel_type})"
+        return f"ChannelModel({self.channel_id, self.channel_type, self.channel_name})"
 
     @staticmethod
     def check_channel_type(channel_id):

@@ -1,8 +1,11 @@
+import re
+
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 from config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
+from models import ChannelType as ch_tp
 
 from .posts_storage import NoNewPosts, PostStorage
 from .warden.warden import NotAllowed, Warden
@@ -15,16 +18,17 @@ def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event) -> None:
         if hasattr(event, "message"):
-            post_storage.post(event.message)
+            await post_storage.post(event.message)
         else:
             logger.critical("No message", event)
 
-    @bot.on(events.NewMessage(pattern="/next.*", from_users=ADMIN))
+    @bot.on(events.NewMessage(pattern=rf"/next({ch_tp.FUN.value}|{ch_tp.NEWS.value})?(\d+)?", from_users=ADMIN))
     async def handle_next_command(event) -> None:
         logger.info(f"Got {event.pattern_match} request from Admin")
-
         try:
-            amount = int(event.pattern_match.group(0).lstrip("/next") or "1")
+            pattern = event.pattern_match.group(1) if True else None
+            amount_str = event.pattern_match.group(2)
+            amount = int(amount_str) if amount_str.isdigit() else 1
         except (ValueError, IndexError) as exp:
             await event.reply(f"Bad request format: {exp}")
             return
@@ -39,7 +43,7 @@ def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
                 return
 
             try:
-                msgs = post_storage.get_oldest_unsent_post()
+                msgs = post_storage.get_oldest_unsent_post(channel_type_filter=pattern)
                 await event.client.forward_messages(entity=ADMIN, messages=msgs, from_peer=AGGREGATOR_CHANNEL)
                 post_storage.set_sent_multiple(msgs)
             except NoNewPosts:

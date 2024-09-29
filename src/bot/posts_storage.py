@@ -4,7 +4,7 @@ from loguru import logger
 from sqlalchemy import func
 from telethon.tl.types import Message
 
-from models import ChannelModel, MessageModel
+from models import ChannelModel, ChannelType, MessageModel
 
 MESSAGE_ID = int
 
@@ -18,7 +18,7 @@ class PostStorage:
         logger.info("Post storage is initializing...")
         self.session_maker = session_maker
 
-    def post(self, message: Message) -> None:
+    async def post(self, message: Message) -> None:
         with self.session_maker() as session:
             channel_id = message.fwd_from.from_id.channel_id
             channel = session.query(ChannelModel).filter_by(channel_id=channel_id).first()
@@ -38,15 +38,31 @@ class PostStorage:
             logger.info("Commiting changes")
             session.commit()
 
-    def get_oldest_unsent_post(self, *args) -> list[MESSAGE_ID]:
-        # todo: should we use transactions here??
+    def get_oldest_unsent_post(self, channel_type_filter=None) -> list[MESSAGE_ID]:
         with self.session_maker() as session:
             first_unsent_id = (
                 session.query(func.min(MessageModel.id)).filter(MessageModel.sent.is_(None)).scalar_subquery()
             )
             first_unsent_message = session.query(MessageModel).filter(MessageModel.id == first_unsent_id).first()
+
             if not first_unsent_message:
                 raise NoNewPosts("No new posts in the storage")
+
+            if channel_type_filter:
+                channel = (
+                    session.query(ChannelModel)
+                    .filter(ChannelModel.channel_id == first_unsent_message.channel_id)
+                    .first()
+                )
+
+                if not channel:
+                    raise NoNewPosts("No corresponding channel found for the message")
+
+                if channel_type_filter == "news" and channel.channel_type != ChannelType.NEWS:
+                    raise NoNewPosts("No new posts of type 'news'")
+                elif channel_type_filter == "fun" and channel.channel_type != ChannelType.FUN:
+                    raise NoNewPosts("No new posts of type 'fun'")
+
             if first_unsent_message.grouped_id is not None:
                 messages = (
                     session.query(MessageModel.message_id)
@@ -54,8 +70,8 @@ class PostStorage:
                     .all()
                 )
                 return [msg.message_id for msg in messages]
-            else:
-                return [first_unsent_message.message_id]
+
+            return [first_unsent_message.message_id]
 
     def set_sent_multiple(self, message_ids: list[int]) -> None:
         with self.session_maker() as session:
