@@ -58,9 +58,9 @@ class PostStorage:
                 if not channel:
                     raise NoNewPosts("No corresponding channel found for the message")
 
-                if channel_type_filter == "news" and channel.channel_type != ChannelType.NEWS:
+                if channel_type_filter == "news" and channel.channel_type != ChannelType.NEWS.value:
                     raise NoNewPosts("No new posts of type 'news'")
-                elif channel_type_filter == "fun" and channel.channel_type != ChannelType.FUN:
+                elif channel_type_filter == "fun" and channel.channel_type != ChannelType.FUN.value:
                     raise NoNewPosts("No new posts of type 'fun'")
 
             if first_unsent_message.grouped_id is not None:

@@ -6,6 +6,7 @@ from telethon.sessions import StringSession
 
 from config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
 from models import ChannelType as ch_tp
+from telegram_slow_client import TelegramSlowClient
 
 from .posts_storage import NoNewPosts, PostStorage
 from .warden.warden import NotAllowed, Warden
@@ -13,7 +14,9 @@ from .warden.warden import NotAllowed, Warden
 
 def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
     logger.info("Creating bot")
-    bot = TelegramClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(bot_token=TELEGRAM_BOT_TOKEN)
+    bot = TelegramSlowClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=0.005).start(
+        bot_token=TELEGRAM_BOT_TOKEN
+    )
 
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event) -> None:
