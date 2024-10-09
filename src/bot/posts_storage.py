@@ -4,9 +4,9 @@ from loguru import logger
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from telethon.tl.types import Message
+from telethon.utils import get_peer_id
 
 from models import ChannelModel, MessageModel
-from utils import get_entity_id
 
 MESSAGE_ID = int
 
@@ -27,7 +27,7 @@ class PostStorage:
     def post(self, message: Message) -> None:
         with self.session_maker() as session:
             original_message_id = message.fwd_from.channel_post
-            original_peer_id = get_entity_id(message.fwd_from.from_id)
+            original_peer_id = get_peer_id(message.fwd_from.from_id)
 
             orm_message = MessageModel(
                 message_id=message.id,
@@ -76,13 +76,16 @@ class PostStorage:
     def is_original_msg_duplicate(self, msgs: list[Message]) -> bool:
         with self.session_maker() as session:
             for msg in msgs:
-                if bool(
+                logger.info(msg)
+                logger.info(msg.id, get_peer_id(msg.peer_id))
+                res = (
                     session.query(MessageModel)
                     .filter(
-                        MessageModel.original_message_id == msg.id,
-                        MessageModel.channel_id == get_entity_id(msg.from_id),
+                        MessageModel.original_message_id == msg.id, MessageModel.channel_id == get_peer_id(msg.peer_id)
                     )
                     .first()
-                ):
+                )
+                logger.info(res)
+                if res:
                     return True
         return False

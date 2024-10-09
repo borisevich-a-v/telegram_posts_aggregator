@@ -25,7 +25,7 @@ class MessageModel(Base):
 
     __table_args__ = (
         # Every message in a telegram channel has unique id
-        UniqueConstraint("original_message_id", "channel_id", name="_customer_location_uc"),
+        UniqueConstraint("original_message_id", "channel_id", name="source_message_uniq"),
     )
 
     def __repr__(self):
