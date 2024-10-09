@@ -32,7 +32,6 @@ services:
   migration:
     image: post_aggregator
     depends_on:
-      - app
       - postgres
     command: alembic upgrade head
     environment:
