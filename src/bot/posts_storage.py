@@ -3,22 +3,12 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from telethon.tl.types import Message, PeerChannel
+from telethon.tl.types import Message
 
 from models import ChannelModel, MessageModel
+from utils import get_entity_id
 
 MESSAGE_ID = int
-
-
-def get_peer_id(message: Message) -> int:
-    if isinstance(message.fwd_from.from_id, PeerChannel):
-        return message.fwd_from.from_id.channel_id
-    # elif isinstance(message.fwd_from.from_id, PeerChat):
-    #     return message.fwd_from.from_id.chat_id
-    # elif isinstance(message.fwd_from.from_id, PeerUser):
-    #     return message.fwd_from.from_id.user_id
-
-    raise ValueError("Not a channel. Probably spam.")
 
 
 class NoNewPosts(Exception):
@@ -26,7 +16,7 @@ class NoNewPosts(Exception):
 
 
 class PostDuplication(Exception):
-    """This post has been saved into database previously, probably it's a repost"""
+    """This post has been saved into database previously, probably it's a repost or second time processing"""
 
 
 class PostStorage:
@@ -36,38 +26,29 @@ class PostStorage:
 
     def post(self, message: Message) -> None:
         with self.session_maker() as session:
-            original_channel_id = get_peer_id(message)
             original_message_id = message.fwd_from.channel_post
-            self.validate_duplication(original_message_id, original_channel_id, session)
+            original_peer_id = get_entity_id(message.fwd_from.from_id)
 
-            message = MessageModel(
+            orm_message = MessageModel(
                 message_id=message.id,
                 grouped_id=message.grouped_id,
-                channel=self.get_or_create_channel(original_channel_id, session),
+                channel=self.get_or_create_channel(original_peer_id, session),
                 original_message_id=original_message_id,
             )
-            session.add(message)
+            session.add(orm_message)
             session.commit()
 
-    def get_or_create_channel(self, channel_id: int, session) -> ChannelModel:
+    def get_or_create_channel(self, channel_id: int, session: Session) -> ChannelModel:
         channel = session.query(ChannelModel).filter_by(channel_id=channel_id).first()
         if not channel:
-            logger.info(f"Adding new channel...: {channel}")
+            logger.info(f"Adding the new channel...: {channel}")
             channel = ChannelModel(channel_id=channel_id)
             session.add(channel)
             session.commit()
         return channel
 
-    def validate_duplication(self, original_message_id: int, channel_id: int, session: Session) -> None:
-        if (
-            session.query(MessageModel)
-            .filter(MessageModel.original_message_id == original_message_id, MessageModel.channel_id == channel_id)
-            .first()
-        ):
-            raise PostDuplication(f"Same post from {channel_id}")
-
     def get_oldest_unsent_post(self) -> list[MESSAGE_ID]:
-        # todo: should we use transactions here??
+        # todo: write 1 query instead of 2
         with self.session_maker() as session:
             first_unsent_id = (
                 session.query(func.min(MessageModel.id)).filter(MessageModel.sent.is_(None)).scalar_subquery()
@@ -85,9 +66,23 @@ class PostStorage:
             else:
                 return [first_unsent_message.message_id]
 
-    def set_sent_multiple(self, message_ids: list[int]) -> None:
+    def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
         with self.session_maker() as session:
             session.query(MessageModel).filter(MessageModel.message_id.in_(message_ids)).update(
                 {MessageModel.sent: datetime.now()}
             )
             session.commit()
+
+    def is_original_msg_duplicate(self, msgs: list[Message]) -> bool:
+        with self.session_maker() as session:
+            for msg in msgs:
+                if bool(
+                    session.query(MessageModel)
+                    .filter(
+                        MessageModel.original_message_id == msg.id,
+                        MessageModel.channel_id == get_entity_id(msg.from_id),
+                    )
+                    .first()
+                ):
+                    return True
+        return False

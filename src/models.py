@@ -23,6 +23,11 @@ class MessageModel(Base):
 
     channel = relationship("ChannelModel", back_populates="messages")
 
+    __table_args__ = (
+        # Every message in a telegram channel has unique id
+        UniqueConstraint("original_message_id", "channel_id", name="_customer_location_uc"),
+    )
+
     def __repr__(self):
         return f"MessageModel({self.id, self.message_id, self.grouped_id, self.sent})"
 
