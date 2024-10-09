@@ -25,10 +25,10 @@ class PostStorage:
         self.session_maker = session_maker
 
     def post(self, message: Message) -> None:
+        original_message_id = message.fwd_from.channel_post
+        original_peer_id = get_peer_id(message.fwd_from.from_id)
+        logger.info("Adding message {} from the {}...", original_message_id, original_peer_id)
         with self.session_maker() as session:
-            original_message_id = message.fwd_from.channel_post
-            original_peer_id = get_peer_id(message.fwd_from.from_id)
-
             orm_message = MessageModel(
                 message_id=message.id,
                 grouped_id=message.grouped_id,
@@ -76,16 +76,21 @@ class PostStorage:
     def is_original_msg_duplicate(self, msgs: list[Message]) -> bool:
         with self.session_maker() as session:
             for msg in msgs:
-                logger.info(msg)
-                logger.info(msg.id, get_peer_id(msg.peer_id))
+                # If message is forwarded, then there is an obvious risk of duplication, if it is an original message
+                # then there is still possibility that Telethon could catch this message multiple times, so we have to
+                # doublecheck anyway
+                if msg.fwd_from is None:
+                    message_id = msg.id
+                    channel_id = get_peer_id(msg.peer_id)
+                else:
+                    message_id = msg.fwd_from.channel_post
+                    channel_id = get_peer_id(msg.fwd_from.from_id)
+
                 res = (
                     session.query(MessageModel)
-                    .filter(
-                        MessageModel.original_message_id == msg.id, MessageModel.channel_id == get_peer_id(msg.peer_id)
-                    )
+                    .filter(MessageModel.original_message_id == message_id, MessageModel.channel_id == channel_id)
                     .first()
                 )
-                logger.info(res)
                 if res:
                     return True
         return False
