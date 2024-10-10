@@ -1,4 +1,4 @@
-FROM python:3.11-bookworm
+FROM python:3.12.7-slim
 
 RUN apt-get update -y  \
     && python -m pip install poetry
