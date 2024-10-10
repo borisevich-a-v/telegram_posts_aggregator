@@ -2,24 +2,24 @@
 name = "telegram-posts-aggregator"
 version = "0.1.0"
 description = ""
-authors = ["andrei_borisevich <andreyborisevichleti@gmail.com>"]
+authors = ["Andrei Borisevich <andreyborisevichleti@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "src" }]
+packages = [{include = "telegram_posts_aggregator"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-telethon = "^1.33.1"
+python = "^3.12"
+telethon = "^1.37.0"
 python-dotenv = "^1.0.1"
 loguru = "^0.7.2"
 pendulum = "^3.0.0"
-sqlalchemy = "^2.0.29"
+sqlalchemy = "^2.0.35"
 psycopg2-binary = "^2.9.9"
-alembic = "^1.13.1"
+alembic = "^1.13.3"
 
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.0"
-pytest = "^8.0.0"
+pre-commit = "^4.0.1"
+pytest = "^8.3.3"
 sqlalchemy-stubs = "^0.4"
 
 [build-system]
