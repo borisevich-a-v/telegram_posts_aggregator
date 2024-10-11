@@ -3,9 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from bot.create_bot import create_bot
-from bot.posts_storage import PostStorage
 from bot.warden.warden import Warden
 from config import DB_CONNECTION_STRING
+from posts_storage import PostStorage
 from telegram_agent.create_agent import create_telegram_agent
 
 if __name__ == "__main__":

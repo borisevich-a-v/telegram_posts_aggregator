@@ -2,8 +2,8 @@ from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
-from bot.posts_storage import PostStorage
 from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from posts_storage import PostStorage
 from telegram_slow_client import TelegramSlowClient
 
 
