@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from telethon.tl.types import Message
 from telethon.utils import get_peer_id
 
-from models import ChannelModel, MessageModel
+from models import ChannelModel, ChannelType, MessageModel
 
 MESSAGE_ID = int
 
@@ -47,24 +47,33 @@ class PostStorage:
             session.commit()
         return channel
 
-    def get_oldest_unsent_post(self) -> list[MESSAGE_ID]:
-        # todo: write 1 query instead of 2
+    def _get_first_unsent_message(self, session: Session, channel_type: ChannelType) -> MessageModel:
+        first_unsent_id = session.query(func.min(MessageModel.id)).filter(MessageModel.sent.is_(None))
+        if channel_type:
+            first_unsent_id.filter(ChannelModel.type == channel_type)
+        first_unsent_id.scalar_subquery()
+
+        first_unsent_message = session.query(MessageModel).filter(MessageModel.id == first_unsent_id).first()
+        if not first_unsent_message:
+            raise NoNewPosts("No new posts in the storage")
+        return first_unsent_message
+
+    def get_oldest_unsent_post(self, channel_type: ChannelType = None) -> list[MESSAGE_ID]:
+        # todo: optimize query
         with self.session_maker() as session:
-            first_unsent_id = (
-                session.query(func.min(MessageModel.id)).filter(MessageModel.sent.is_(None)).scalar_subquery()
-            )
-            first_unsent_message = session.query(MessageModel).filter(MessageModel.id == first_unsent_id).first()
-            if not first_unsent_message:
-                raise NoNewPosts("No new posts in the storage")
-            if first_unsent_message.grouped_id is not None:
-                messages = (
+            first_unsent_message = self._get_first_unsent_message(session, channel_type)
+
+            if first_unsent_message.grouped_id is None:
+                return [first_unsent_message.message_id]
+
+            return [
+                msg.message_id
+                for msg in (
                     session.query(MessageModel.message_id)
                     .filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
                     .all()
                 )
-                return [msg.message_id for msg in messages]
-            else:
-                return [first_unsent_message.message_id]
+            ]
 
     def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
         with self.session_maker() as session:
