@@ -3,9 +3,9 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 from config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
+from posts_storage import NoNewPosts, PostStorage
 from telegram_slow_client import TelegramSlowClient
 
-from .posts_storage import NoNewPosts, PostStorage
 from .warden.warden import NotAllowed, Warden
 
 
