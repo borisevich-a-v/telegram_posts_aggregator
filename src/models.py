@@ -10,6 +10,9 @@ class ChannelType(enum.StrEnum):
     FUN = "fun"
     NEWS = "news"
 
+    # `ALL` is a special type that returns posts without filtering by channel. `next` is a legacy command name
+    ALL = "next"
+
 
 class MessageModel(Base):
     __tablename__ = "message"

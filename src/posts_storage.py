@@ -48,12 +48,12 @@ class PostStorage:
         return channel
 
     def _get_first_unsent_message(self, session: Session, channel_type: ChannelType) -> MessageModel:
-        first_unsent_id = session.query(func.min(MessageModel.id)).filter(MessageModel.sent.is_(None))
-        if channel_type:
-            first_unsent_id.filter(ChannelModel.type == channel_type)
-        first_unsent_id.scalar_subquery()
+        unsent_message_query = session.query(MessageModel).join(ChannelModel).filter(MessageModel.sent.is_(None))
+        if channel_type is not None:
+            unsent_message_query = unsent_message_query.filter(ChannelModel.type == channel_type)
 
-        first_unsent_message = session.query(MessageModel).filter(MessageModel.id == first_unsent_id).first()
+        first_unsent_message = unsent_message_query.order_by(MessageModel.id).first()
+
         if not first_unsent_message:
             raise NoNewPosts("No new posts in the storage")
         return first_unsent_message
