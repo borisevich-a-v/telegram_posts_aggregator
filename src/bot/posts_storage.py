@@ -39,10 +39,10 @@ class PostStorage:
             session.commit()
 
     def get_or_create_channel(self, channel_id: int, session: Session) -> ChannelModel:
-        channel = session.query(ChannelModel).filter_by(channel_id=channel_id).first()
+        channel = session.query(ChannelModel).filter_by(id=channel_id).first()
         if not channel:
             logger.info(f"Adding the new channel...: {channel}")
-            channel = ChannelModel(channel_id=channel_id)
+            channel = ChannelModel(id=channel_id)
             session.add(channel)
             session.commit()
         return channel
