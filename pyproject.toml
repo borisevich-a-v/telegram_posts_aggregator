@@ -21,6 +21,7 @@ alembic = "^1.13.3"
 pre-commit = "^4.0.1"
 pytest = "^8.3.3"
 sqlalchemy-stubs = "^0.4"
+pytest-asyncio = "^0.24.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -28,4 +29,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-testpaths="tests"
+testpaths = "tests"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
