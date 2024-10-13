@@ -1,12 +1,12 @@
 from datetime import datetime
+from typing import Any
 
 from loguru import logger
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 from telethon.tl.types import Message
 from telethon.utils import get_peer_id
 
-from models import ChannelModel, ChannelType, MessageModel
+from models import NOT_SPECIFIED_CHANNEL_TYPE, ChannelModel, ChannelTypeModel, MessageModel
 
 MESSAGE_ID = int
 
@@ -47,10 +47,13 @@ class PostStorage:
             session.commit()
         return channel
 
-    def _get_first_unsent_message(self, session: Session, channel_type: ChannelType) -> MessageModel:
+    def _get_first_unsent_message(self, session: Session, channel_type: Any) -> MessageModel:
+        # My first code with SQLAlchemy, it's bad, but I'll fix it later
         unsent_message_query = session.query(MessageModel).join(ChannelModel).filter(MessageModel.sent.is_(None))
         if channel_type is not None:
-            unsent_message_query = unsent_message_query.filter(ChannelModel.type == channel_type)
+            unsent_message_query = unsent_message_query.join(ChannelTypeModel).filter(
+                ChannelTypeModel.type_ == channel_type
+            )
 
         first_unsent_message = unsent_message_query.order_by(MessageModel.id).first()
 
@@ -58,8 +61,8 @@ class PostStorage:
             raise NoNewPosts("No new posts in the storage")
         return first_unsent_message
 
-    def get_oldest_unsent_post(self, channel_type: ChannelType = None) -> list[MESSAGE_ID]:
-        # todo: optimize query
+    def get_oldest_unsent_post(self, channel_type: str | None = None) -> list[MESSAGE_ID]:
+        logger.info("Channel type is {}", channel_type)
         with self.session_maker() as session:
             first_unsent_message = self._get_first_unsent_message(session, channel_type)
 
@@ -103,3 +106,11 @@ class PostStorage:
                 if res:
                     return True
         return False
+
+    def get_all_custom_channel_types(self):
+        """Return all channels types except default one"""
+        with self.session_maker() as session:
+            types = (
+                session.query(ChannelTypeModel.type_).filter(ChannelTypeModel.type_ != NOT_SPECIFIED_CHANNEL_TYPE).all()
+            )
+            return [t[0] for t in types]
