@@ -21,6 +21,7 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
         The bot can't access some posts from other public channel, so we forward posts to the place where bot can
         access them.
         """
+
         if hasattr(event, "messages") and event.grouped_id:
             if post_storage.is_original_msg_duplicate(event.messages):
                 logger.warning("The messages have been saved previously: {}", event.messages)
