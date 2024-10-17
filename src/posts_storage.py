@@ -24,25 +24,27 @@ class PostStorage:
         logger.info("Post storage is initializing...")
         self.session_maker = session_maker
 
-    def post(self, message: Message) -> None:
+    def post(self, message: Message, channel_name: str) -> None:
         original_message_id = message.fwd_from.channel_post
         original_peer_id = get_peer_id(message.fwd_from.from_id)
+
+        logger.info(f"Adding message {original_message_id} from channel '{channel_name}' (ID: {original_peer_id})")
         logger.info("Adding message {} from the {}...", original_message_id, original_peer_id)
         with self.session_maker() as session:
             orm_message = MessageModel(
                 message_id=message.id,
                 grouped_id=message.grouped_id,
-                channel=self.get_or_create_channel(original_peer_id, session),
+                channel=self.get_or_create_channel(original_peer_id, session, channel_name),
                 original_message_id=original_message_id,
             )
             session.add(orm_message)
             session.commit()
 
-    def get_or_create_channel(self, channel_id: int, session: Session) -> ChannelModel:
+    def get_or_create_channel(self, channel_id: int, session: Session, channel_name: str) -> ChannelModel:
         channel = session.query(ChannelModel).filter_by(id=channel_id).first()
         if not channel:
-            logger.info(f"Adding the new channel...: {channel}")
-            channel = ChannelModel(id=channel_id)
+            logger.info(f"Adding the new channel...: {channel_name}")
+            channel = ChannelModel(id=channel_id, name=channel_name)
             session.add(channel)
             session.commit()
         return channel

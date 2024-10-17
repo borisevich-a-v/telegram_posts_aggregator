@@ -48,11 +48,17 @@ def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
         bot_token=TELEGRAM_BOT_TOKEN
     )
 
-    # TODO: should we parse album here?
+    # TODO: should we parse album here? nea
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
     async def aggregator_channel_listener(event) -> None:
         if hasattr(event, "message"):
-            post_storage.post(event.message)
+            message = event.message
+            if message.fwd_from and message.fwd_from.from_id:
+                original_chat = await event.client.get_entity(message.fwd_from.from_id)
+                channel_name = original_chat.title if original_chat else "Unknown Channel"
+                post_storage.post(event.message, channel_name)
+            else:
+                logger.warning("Message is not forwarded from a channel, skipping")
         else:
             logger.critical("No message {}", event)
 
