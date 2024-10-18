@@ -3,6 +3,7 @@ import re
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+from telethon.utils import get_display_name
 from typing_extensions import NamedTuple
 
 from bot.warden.warden import NotAllowed, Warden
@@ -55,10 +56,10 @@ def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
             message = event.message
             if message.fwd_from and message.fwd_from.from_id:
                 original_chat = await event.client.get_entity(message.fwd_from.from_id)
-                channel_name = original_chat.title if original_chat else "Unknown Channel"
+                channel_name = get_display_name(original_chat)
                 post_storage.post(event.message, channel_name)
             else:
-                logger.warning("Message is not forwarded from a channel, skipping")
+                logger.warning("Message is not forwarded, skipping")
         else:
             logger.critical("No message {}", event)
 

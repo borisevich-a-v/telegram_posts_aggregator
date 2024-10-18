@@ -28,7 +28,6 @@ class PostStorage:
         original_message_id = message.fwd_from.channel_post
         original_peer_id = get_peer_id(message.fwd_from.from_id)
 
-        logger.info(f"Adding message {original_message_id} from channel '{channel_name}' (ID: {original_peer_id})")
         logger.info("Adding message {} from the {}...", original_message_id, original_peer_id)
         with self.session_maker() as session:
             orm_message = MessageModel(
