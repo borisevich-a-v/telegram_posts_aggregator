@@ -1,10 +1,19 @@
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+from telethon.tl.types import Message, PeerUser
 
 from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from posts_storage import PostStorage
 from telegram_slow_client import TelegramSlowClient
+
+
+def is_it_user(message: Message) -> bool:
+    from_id = message.from_id
+    if isinstance(from_id, (PeerUser,)):
+        return True
+    logger.info(from_id)
+    return False
 
 
 def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
@@ -23,6 +32,9 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
         """
 
         if hasattr(event, "messages") and event.grouped_id:
+            if is_it_user(event.messages[0]):
+                return
+
             if post_storage.is_original_msg_duplicate(event.messages):
                 logger.warning("The messages have been saved previously: {}", event.messages)
                 return
@@ -31,6 +43,9 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
             logger.info("Got a new post {} and added it to the aggregation channel", [m.id for m in event.messages])
 
         if hasattr(event, "message") and not event.grouped_id:
+            if is_it_user(event.message):
+                return
+
             if post_storage.is_original_msg_duplicate([event.message]):
                 logger.warning("The messages have been saved previously: {}", event.message)
                 return

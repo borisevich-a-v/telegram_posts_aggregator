@@ -63,7 +63,7 @@ class PostStorage:
         return first_unsent_message
 
     def get_oldest_unsent_post(self, channel_type: str | None = None) -> list[MESSAGE_ID]:
-        logger.info("Channel type is {}", channel_type)
+        logger.debug("Channel type is {}", channel_type)
         with self.session_maker() as session:
             first_unsent_message = self._get_first_unsent_message(session, channel_type)
 
