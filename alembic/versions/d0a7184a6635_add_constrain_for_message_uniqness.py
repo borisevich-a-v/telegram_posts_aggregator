@@ -1,4 +1,4 @@
-"""add constrain for message uniqness
+"""add constrain for message uniqueness
 
 Revision ID: d0a7184a6635
 Revises: 3884a621bef1
