@@ -9,7 +9,7 @@ if os.environ.get("ENVIRONMENT") == "container":
     load_dotenv(".env")
 else:
     logger.info("Starting locally")
-    load_dotenv(".env_local") or load_dotenv("../.env_local")
+    load_dotenv(".env_local.env") or load_dotenv("../.env_local.env")
 
 LIST_DELIMITER = "|"
 
@@ -26,9 +26,6 @@ CLIENT_SESSION = str(os.environ.get("CLIENT_SESSION"))
 DB_CONNECTION_STRING = str(os.environ.get("DB_CONNECTION_STRING"))
 
 ADMIN = int(os.environ.get("ADMIN", 0))
-
-FUN_CHANNELS = load_env_list("FUN_CHANNELS")
-NEWS_CHANNELS = load_env_list("NEWS_CHANNELS")
 
 AGGREGATOR_CHANNEL = str(os.environ.get("AGGREGATOR_CHANNEL"))
 
