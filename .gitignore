@@ -3,7 +3,7 @@
 # not project files
 __pycache__
 .env
-.env_local
+.env_local.env
 venv
 
 
