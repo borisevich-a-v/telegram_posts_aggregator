@@ -2,6 +2,14 @@
 
 Aggregate posts from several channels and send it via bot according the rules.
 
+## Diagrams
+### Overview
+![ALT TEXT](./documentaion/diagrams/overview_diagram.png)
+### DB model
+![ALT TEXT](./documentaion/diagrams/metadata_db.png)
+
+
+
 ## Setup environment
 
 ### Install dependencies

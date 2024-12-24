@@ -12,3 +12,5 @@ ChannelParser.session
 ChannelParser.session-journal
 bot.session-journal
 bot.session
+
+*.drawio.bkp
