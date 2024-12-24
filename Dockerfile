@@ -8,7 +8,16 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
+
+# Preinstall dependencies
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-interaction --no-ansi
+RUN poetry install --no-interaction --no-ansi --no-root
+
+COPY . .
+
+RUN poetry install --no-interaction --no-ansi --only-root
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-interaction --no-ansi
 
 COPY . .

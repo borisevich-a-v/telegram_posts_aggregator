@@ -4,9 +4,7 @@ services:
     image: post_aggregator
     # It's better to not restart this container automatically, due to tg limitations
     restart: no
-    volumes:
-      - "./:/app"
-    command: poetry run python src/__main__.py
+    command: poetry run python -m aggregator
     environment:
       ENVIRONMENT: container
     networks:
@@ -33,8 +31,6 @@ services:
     depends_on:
       - postgres
     command: alembic upgrade head
-    volumes:
-      - "./:/app"
     environment:
       ENVIRONMENT: container
     networks:

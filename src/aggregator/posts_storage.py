@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from telethon.tl.types import Message
 from telethon.utils import get_peer_id
 
-from models import NOT_SPECIFIED_CHANNEL_TYPE, ChannelModel, ChannelTypeModel, MessageModel
+from aggregator.models import NOT_SPECIFIED_CHANNEL_TYPE, ChannelModel, ChannelTypeModel, MessageModel
 
 MESSAGE_ID = int
 

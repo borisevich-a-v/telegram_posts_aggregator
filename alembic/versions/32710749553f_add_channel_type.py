@@ -6,13 +6,12 @@ Create Date: 2024-10-12 12:10:21.561330
 
 """
 
-from email.policy import default
 from typing import Sequence, Union
 
 import sqlalchemy as sa
 
+from aggregator.models import NOT_SPECIFIED_CHANNEL_TYPE
 from alembic import op
-from src.models import NOT_SPECIFIED_CHANNEL_TYPE
 
 # revision identifiers, used by Alembic.
 revision: str = "32710749553f"

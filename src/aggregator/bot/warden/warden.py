@@ -3,7 +3,7 @@ from typing import Type
 
 from pendulum import DateTime, WeekDay, now, time
 
-from config import USER_TIME_ZONE
+from aggregator.config import USER_TIME_ZONE
 
 from .time_range import TimeRange
 

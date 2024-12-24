@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from bot.create_bot import PostRequest, PostRequestError, get_request_pattern
+from aggregator.bot.create_bot import PostRequest, PostRequestError, get_request_pattern
 
 
 def test_get_request_pattern():

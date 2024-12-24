@@ -3,16 +3,15 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.tl.types import Message, PeerUser
 
-from config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
-from posts_storage import PostStorage
-from telegram_slow_client import TelegramSlowClient
+from aggregator.config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from aggregator.posts_storage import PostStorage
+from aggregator.telegram_slow_client import TelegramSlowClient
 
 
 def is_it_user(message: Message) -> bool:
     from_id = message.from_id
     if isinstance(from_id, (PeerUser,)):
         return True
-    logger.info(from_id)
     return False
 
 
@@ -30,28 +29,23 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
         The bot can't access some posts from other public channel, so we forward posts to the place where bot can
         access them.
         """
-
         if hasattr(event, "messages") and event.grouped_id:
-            if is_it_user(event.messages[0]):
-                return
+            messages = event.messages
+        elif hasattr(event, "message") and not event.grouped_id:
+            messages = [event.message]
+        else:
+            logger.info("Got an update, that is not a message. Skipped.")
+            return
 
-            if post_storage.is_original_msg_duplicate(event.messages):
-                logger.warning("The messages have been saved previously: {}", event.messages)
-                return
+        if is_it_user(messages[0]):
+            return
 
-            await event.forward_to(AGGREGATOR_CHANNEL)
-            logger.info("Got a new post {} and added it to the aggregation channel", [m.id for m in event.messages])
+        if post_storage.is_original_msg_duplicate(messages):
+            logger.warning("The messages have been saved previously: {}", messages)
+            return
 
-        if hasattr(event, "message") and not event.grouped_id:
-            if is_it_user(event.message):
-                return
-
-            if post_storage.is_original_msg_duplicate([event.message]):
-                logger.warning("The messages have been saved previously: {}", event.message)
-                return
-
-            await event.forward_to(AGGREGATOR_CHANNEL)
-            logger.info(f"Got new post {event.message.id} and have added it to the aggregation channel")
+        await event.forward_to(AGGREGATOR_CHANNEL)
+        logger.info("Got a new post {} and added it to the aggregation channel", [m.id for m in event.messages])
 
     client.start()
     logger.info("Client has been initialized")
