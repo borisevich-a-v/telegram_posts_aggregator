@@ -12,7 +12,7 @@ if os.environ.get("ENVIRONMENT") == "container":
     load_dotenv(".env")
 else:
     logger.info("Starting locally")
-    load_dotenv(".env_local.env") or load_dotenv("../.env_local.env")
+    load_dotenv(".env_local.env") or load_dotenv("../../.env_local.env")
 
 LIST_DELIMITER = "|"
 

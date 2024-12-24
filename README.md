@@ -46,9 +46,14 @@ Create a .env file and fill in all required variables (see .env.example, it cont
 ## Run the application in a container
 
 ```sh
-docker compose build
-docker compose up
+make build
+make up-all
 ```
+
+## Run the application locally
+Note: db should be in a container
+
+poetry run
 
 ## DB migrations
 

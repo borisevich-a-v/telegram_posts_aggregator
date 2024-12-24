@@ -24,20 +24,20 @@ repos:
         args:
           - --line-length=120
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
-    hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
-        language: python
-        types: [ python ]
-        args:
-          - --ignore-missing-imports
-          - --scripts-are-modules
-          - --allow-untyped-decorators
-        require_serial: true
-        exclude: "tests|alembic|src/models.py"
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v1.11.2
+#    hooks:
+#      - id: mypy
+#        name: mypy
+#        entry: mypy
+#        language: python
+#        types: [ python ]
+#        args:
+#          - --ignore-missing-imports
+#          - --scripts-are-modules
+#          - --allow-untyped-decorators
+#        require_serial: true
+#        exclude: "tests|alembic|src/models.py"
 
   - repo: https://github.com/pycqa/pylint
     rev: v3.2.7

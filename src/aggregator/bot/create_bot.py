@@ -6,10 +6,10 @@ from telethon.sessions import StringSession
 from telethon.utils import get_display_name
 from typing_extensions import NamedTuple
 
-from bot.warden.warden import NotAllowed, Warden
-from config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
-from posts_storage import NoNewPosts, PostStorage
-from telegram_slow_client import TelegramSlowClient
+from aggregator.bot.warden.warden import NotAllowed, Warden
+from aggregator.config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
+from aggregator.posts_storage import NoNewPosts, PostStorage
+from aggregator.telegram_slow_client import TelegramSlowClient
 
 ANY_CHANNEL_COMMAND = "next"
 

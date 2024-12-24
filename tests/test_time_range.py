@@ -1,7 +1,7 @@
 import pytest
 from pendulum import time
 
-from bot.warden.time_range import TimeRange
+from aggregator.bot.warden.time_range import TimeRange
 
 
 def test_start_equal_end_time():
