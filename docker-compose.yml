@@ -2,7 +2,8 @@ services:
   app:
     build: .
     image: post_aggregator
-    restart: on-failure
+    # It's better to not restart this container automatically, due to tg limitations
+    restart: no
     volumes:
       - "./:/app"
     command: poetry run python src/__main__.py
@@ -13,7 +14,7 @@ services:
 
 
   postgres:
-    image: postgres:16.4
+    image: postgres:17.2
     restart: on-failure
     environment:
       POSTGRES_USER: admin

@@ -4,6 +4,9 @@ import pendulum
 from dotenv import load_dotenv
 from loguru import logger
 
+# Sometimes it is quite useful to have both a container and a local setups. Unfortunately we should have at most
+# one client for every session, otherwise the session will be destroyed, so to not mix them we keep two different
+# env files.
 if os.environ.get("ENVIRONMENT") == "container":
     logger.info("Starting in a container")
     load_dotenv(".env")
