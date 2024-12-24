@@ -9,3 +9,6 @@ up-all:
 
 up-infra:
 	docker compose up postgres migration --build
+
+render_diagrams:
+	./utilities/render_diagram.sh
