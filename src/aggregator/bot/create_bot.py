@@ -3,14 +3,11 @@ import re
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-from telethon.utils import get_display_name
 from typing_extensions import NamedTuple
 
 from aggregator.bot.warden.warden import NotAllowed, Warden
-from aggregator.config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN, \
-    BOT_SESSION
+from aggregator.config import ADMIN, AGGREGATOR_CHANNEL, BOT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from aggregator.posts_storage import NoNewPosts, PostStorage
-from aggregator.telegram_slow_client import TelegramSlowClient
 
 ANY_CHANNEL_COMMAND = "next"
 
@@ -46,21 +43,7 @@ def get_request_pattern(post_storage: PostStorage) -> re.Pattern:
 
 def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
     logger.info("Creating bot")
-    bot = TelegramSlowClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=0.005)
-
-    # TODO: should we parse album here? nea
-    @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
-    async def aggregator_channel_listener(event) -> None:
-        if hasattr(event, "message"):
-            message = event.message
-            if message.fwd_from and message.fwd_from.from_id:
-                original_chat = await event.client.get_entity(message.fwd_from.from_id)
-                channel_name = get_display_name(original_chat)
-                post_storage.post(event.message, channel_name)
-            else:
-                logger.warning("Message is not forwarded, skipping")
-        else:
-            logger.critical("No message {}", event)
+    bot = TelegramClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
     @bot.on(events.NewMessage(pattern=get_request_pattern(post_storage), from_users=ADMIN))
     async def handle_posts_request_command(event) -> None:
