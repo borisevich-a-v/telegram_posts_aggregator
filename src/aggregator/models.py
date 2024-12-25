@@ -12,17 +12,18 @@ class MessageModel(Base):
     id = Column(Integer, primary_key=True)
     message_id = Column(Integer, nullable=False)  # message id in the aggr channel
     grouped_id = Column(BigInteger, nullable=True)  # grouped_id is a Telegram hack to group messages
-    channel_id = Column(BigInteger, ForeignKey("channel.id"), nullable=False)  # source channel id.
     sent = Column(DateTime, nullable=True)  # have the message been sent to the user. NULL if it haven't been sent
-    original_message_id = Column(Integer, nullable=False)  # Message id in a source channel. for deduplicate reposts
+
+    # id of the channel where the message is forwarded from
+    channel_id = Column(BigInteger, ForeignKey("channel.id"), nullable=False)
+
+    # Source channel and message id (in case the message was fwd into listening channel)
+    original_channel_id = Column(BigInteger, nullable=False)
+    original_message_id = Column(Integer, nullable=False)
 
     channel = relationship("ChannelModel", back_populates="messages")
 
-    __table_args__ = (
-        # Every message in a telegram channel has unique id, so the pair original_message_id
-        # and (original) channel_id should be uniq
-        UniqueConstraint("original_message_id", "channel_id", name="source_message_uniq"),
-    )
+    __table_args__ = (UniqueConstraint("original_channel_id", "original_message_id", name="source_message_uniq"),)
 
     def __repr__(self):
         return f"MessageModel({self.id, self.message_id, self.grouped_id, self.channel_id, self.sent, self.original_message_id})"

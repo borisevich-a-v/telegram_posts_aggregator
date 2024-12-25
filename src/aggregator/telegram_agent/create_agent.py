@@ -1,51 +1,70 @@
+import asyncio
+
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-from telethon.tl.types import Message, PeerUser
+from telethon.utils import get_peer_id
 
 from aggregator.config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from aggregator.posts_storage import PostStorage
-from aggregator.telegram_slow_client import TelegramSlowClient
 
 
-def is_it_user(message: Message) -> bool:
-    from_id = message.from_id
-    if isinstance(from_id, (PeerUser,)):
-        return True
-    return False
 
 
 def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
     logger.info("Creating telegram agent")
-    client = TelegramSlowClient(
-        StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=3
-    )
+    client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
-    @client.on(events.NewMessage(AGGREGATOR_CHANNEL, blacklist_chats=True))
-    @client.on(events.Album(AGGREGATOR_CHANNEL, blacklist_chats=True))
+    whitelisted_channels = post_storage.get_whitelisted_channel_ids()
+    forwarding_message_lock = asyncio.Lock()
+
+    @client.on(events.NewMessage(whitelisted_channels))
+    @client.on(events.Album(whitelisted_channels))
     async def public_channel_listener(event) -> None:
         """
         This handler just forward messages to the aggregation channel.
         The bot can't access some posts from other public channel, so we forward posts to the place where bot can
         access them.
         """
-        if hasattr(event, "messages") and event.grouped_id:
-            messages = event.messages
-        elif hasattr(event, "message") and not event.grouped_id:
+        if hasattr(event, "message"):
+            # probably it's a place for improvement.
+            # IDK how to forward grouped messages together if only process separated messages, but not album.
+            logger.debug("Processing a single message event...")
+            is_single_message = True
             messages = [event.message]
+            await asyncio.sleep(2)
+
+        elif hasattr(event, "messages"):
+            logger.debug("Processing a multi message event...")
+            is_single_message = False
+            messages = event.messages
+
         else:
-            logger.info("Got an update, that is not a message. Skipped.")
+            logger.debug("Not a message")
             return
 
-        if is_it_user(messages[0]):
-            return
+        async with forwarding_message_lock:
+            if post_storage.is_duplicate(messages):
+                logger.warning("The messages have been saved previously: {}", messages)
+                return
+            logger.info("New messages {} will be forwarded into the aggregation channel", messages)
+            fwd_event = await event.forward_to(AGGREGATOR_CHANNEL)
 
-        if post_storage.is_original_msg_duplicate(messages):
-            logger.warning("The messages have been saved previously: {}", messages)
-            return
+            first_message = fwd_event if is_single_message else  fwd_event[0]
+            fwd_messages = [fwd_event] if is_single_message else  fwd_event
 
-        await event.forward_to(AGGREGATOR_CHANNEL)
-        logger.info("Got a new post {} and added it to the aggregation channel", [m.id for m in event.messages])
+            original_channel_id = get_peer_id(first_message.fwd_from.from_id)
+            forwarded_from_channel_id = get_peer_id(messages[0].peer_id)
+
+            for fwd_msg, msg  in zip(fwd_messages, messages):
+                post_storage.post(
+                    fwd_msg.id,
+                    msg.grouped_id,
+                    forwarded_from_channel_id,
+                    original_channel_id,
+                    fwd_msg.fwd_from.channel_post
+                )
+        logger.debug("Messages was successfully processed")
 
     client.start()
     logger.info("Client has been initialized")

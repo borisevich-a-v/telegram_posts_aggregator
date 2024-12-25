@@ -24,29 +24,17 @@ class PostStorage:
         logger.info("Post storage is initializing...")
         self.session_maker = session_maker
 
-    def post(self, message: Message, channel_name: str) -> None:
-        original_message_id = message.fwd_from.channel_post
-        original_peer_id = get_peer_id(message.fwd_from.from_id)
-
-        logger.info("Adding message {} from the {}...", original_message_id, original_peer_id)
+    def post(self, message_id: MESSAGE_ID, grouped_id: int , event_peer_id, original_channel_id, original_message_id) -> None:
         with self.session_maker() as session:
             orm_message = MessageModel(
-                message_id=message.id,
-                grouped_id=message.grouped_id,
-                channel=self.get_or_create_channel(original_peer_id, session, channel_name),
+                message_id=message_id,
+                grouped_id=grouped_id,
+                channel_id=event_peer_id,
+                original_channel_id=original_channel_id,
                 original_message_id=original_message_id,
             )
             session.add(orm_message)
             session.commit()
-
-    def get_or_create_channel(self, channel_id: int, session: Session, channel_name: str) -> ChannelModel:
-        channel = session.query(ChannelModel).filter_by(id=channel_id).first()
-        if not channel:
-            logger.info(f"Adding the new channel...: {channel_name}")
-            channel = ChannelModel(id=channel_id, name=channel_name)
-            session.add(channel)
-            session.commit()
-        return channel
 
     def _get_first_unsent_message(self, session: Session, channel_type: Any) -> MessageModel:
         # My first code with SQLAlchemy, it's bad, but I'll fix it later
@@ -86,7 +74,7 @@ class PostStorage:
             )
             session.commit()
 
-    def is_original_msg_duplicate(self, msgs: list[Message]) -> bool:
+    def is_duplicate(self, msgs: list[Message]) -> bool:
         with self.session_maker() as session:
             for msg in msgs:
                 # If message is forwarded, then there is an obvious risk of duplication, if it is an original message
@@ -114,4 +102,9 @@ class PostStorage:
             types = (
                 session.query(ChannelTypeModel.type_).filter(ChannelTypeModel.type_ != NOT_SPECIFIED_CHANNEL_TYPE).all()
             )
-            return [t[0] for t in types]
+        return [t[0] for t in types]
+
+    def get_whitelisted_channel_ids(self) -> list[int]:
+        with self.session_maker() as session:
+            channel_ids = session.query(ChannelModel.id).all()
+        return [t[0] for t in channel_ids]
