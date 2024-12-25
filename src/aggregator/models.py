@@ -14,10 +14,10 @@ class MessageModel(Base):
     grouped_id = Column(BigInteger, nullable=True)  # grouped_id is a Telegram hack to group messages
     sent = Column(DateTime, nullable=True)  # have the message been sent to the user. NULL if it haven't been sent
 
-    # id of the channel where the message is forwarded from
+    # id of the channel, the message is forwarded from
     channel_id = Column(BigInteger, ForeignKey("channel.id"), nullable=False)
 
-    # Source channel and message id (in case the message was fwd into listening channel)
+    # Source channel and message id (in case the message was forwarded into the listening channel)
     original_channel_id = Column(BigInteger, nullable=False)
     original_message_id = Column(Integer, nullable=False)
 

@@ -14,7 +14,7 @@ Aggregate posts from several channels and send it via bot according the rules.
 
 ### Install dependencies
 
-The project uses [Poetry](https://python-poetry.org/)  for dependency management. Please set up the project following the instructions in this [poetry guide](https://python-poetry.org/docs/basic-usage/#initialising-a-pre-existing-project).
+The project uses [Poetry](https://python-poetry.org/)  for dependency management. Please set up the project following the instructions [poetry guide](https://python-poetry.org/docs/basic-usage/#initialising-a-pre-existing-project).
 
 ### Set up Telegram entities
 
@@ -51,9 +51,9 @@ make up-all
 ```
 
 ## Run the application locally
-Note: db should be in a container
+Note: db should be run in a container
 
-poetry run
+make up-local
 
 ## DB migrations
 
