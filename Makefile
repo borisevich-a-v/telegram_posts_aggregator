@@ -1,6 +1,3 @@
-generate-session:
-	poetry run python utilities/generate_session.py
-
 build:
 	docker compose build
 
@@ -19,5 +16,11 @@ up-local: up-infra
 down:
 	docker compose down
 
-render_diagrams:
+render-diagrams:
 	./utilities/render_diagram.sh
+
+generate-bot-session:
+	poetry run python utilities/generate_session.py --bot
+
+generate-client-session:
+	poetry run python utilities/generate_session.py --client

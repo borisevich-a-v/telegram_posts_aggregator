@@ -1,3 +1,3 @@
-- [ ] Change documentation and regenerate images for diagram if needed 
+- [ ] Change documentation and regenerate images for diagram if needed
 - [ ] Migrations work fine
 - [ ] I've tested my changes manually
