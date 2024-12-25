@@ -110,3 +110,8 @@ class PostStorage:
         with self.session_maker() as session:
             channel_ids = session.query(ChannelModel.id).all()
         return [t[0] for t in channel_ids]
+
+    def add_channel(self, id_: int, name: str | None) -> None:
+        with self.session_maker() as session:
+            session.add(ChannelModel(id=id_, name=name))
+            session.commit()

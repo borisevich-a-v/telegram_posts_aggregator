@@ -1,23 +1,27 @@
 import asyncio
+from typing import NoReturn
 
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.utils import get_peer_id
 
-from aggregator.config import AGGREGATOR_CHANNEL, CLIENT_SESSION, TELEGRAM_API_HASH, TELEGRAM_API_ID
+from aggregator.config import (
+    AGGREGATOR_CHANNEL,
+    CLIENT_SESSION,
+    TELEGRAM_API_HASH,
+    TELEGRAM_API_ID,
+    UPDATE_WHITELISTED_CHANNELS_INTERVAL,
+)
 from aggregator.posts_storage import PostStorage
 
+FORWARDING_MESSAGE_LOCK = asyncio.Lock()
 
-def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
-    logger.info("Creating telegram agent")
-    client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
-    whitelisted_channels = post_storage.get_whitelisted_channel_ids()
-    forwarding_message_lock = asyncio.Lock()
-
-    @client.on(events.NewMessage(whitelisted_channels))
-    @client.on(events.Album(whitelisted_channels))
+async def continuously_update_channel_listeners(
+    client: TelegramClient,
+    post_storage: PostStorage,
+) -> NoReturn:
     async def public_channel_listener(event) -> None:
         """
         This handler just forward messages to the aggregation channel.
@@ -41,7 +45,7 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
             logger.debug("Not a message")
             return
 
-        async with forwarding_message_lock:
+        async with FORWARDING_MESSAGE_LOCK:
             if post_storage.is_duplicate(messages):
                 logger.warning("The messages have been saved previously: {}", messages)
                 return
@@ -64,6 +68,27 @@ def create_telegram_agent(post_storage: PostStorage) -> TelegramClient:
                 )
         logger.debug("Messages was successfully processed")
 
-    client.start()
+    while True:
+        logger.debug("Updating channels to listen.")
+        whitelisted_channels = post_storage.get_whitelisted_channel_ids()
+        message_event = events.NewMessage(whitelisted_channels)
+        album_event = events.Album(whitelisted_channels)
+
+        client.add_event_handler(public_channel_listener, album_event)
+        client.add_event_handler(public_channel_listener, message_event)
+
+        await asyncio.sleep(UPDATE_WHITELISTED_CHANNELS_INTERVAL)
+
+        client.remove_event_handler(public_channel_listener, album_event)
+        client.remove_event_handler(public_channel_listener, message_event)
+
+
+async def create_telegram_agent(post_storage: PostStorage) -> tuple[TelegramClient, asyncio.Task]:
+    logger.info("Creating telegram agent")
+    client = TelegramClient(StringSession(CLIENT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+
+    listener_updater = asyncio.create_task(continuously_update_channel_listeners(client, post_storage))
+
+    await client.start()
     logger.info("Client has been initialized")
-    return client
+    return client, listener_updater
