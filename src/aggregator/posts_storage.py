@@ -24,7 +24,9 @@ class PostStorage:
         logger.info("Post storage is initializing...")
         self.session_maker = session_maker
 
-    def post(self, message_id: MESSAGE_ID, grouped_id: int , event_peer_id, original_channel_id, original_message_id) -> None:
+    def post(
+        self, message_id: MESSAGE_ID, grouped_id: int, event_peer_id, original_channel_id, original_message_id
+    ) -> None:
         with self.session_maker() as session:
             orm_message = MessageModel(
                 message_id=message_id,
