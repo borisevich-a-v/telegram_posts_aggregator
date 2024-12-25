@@ -17,7 +17,7 @@ def generate_bot_session():
     print("Generating bot session")
     with TelegramClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH).start(bot_token=TELEGRAM_BOT_TOKEN) as bot:
         print("Bot session:")
-        print(bot.sesson.save())
+        print(bot.session.save())
 
 
 if len(sys.argv) != 2:
