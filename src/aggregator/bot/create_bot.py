@@ -7,7 +7,8 @@ from telethon.utils import get_display_name
 from typing_extensions import NamedTuple
 
 from aggregator.bot.warden.warden import NotAllowed, Warden
-from aggregator.config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN
+from aggregator.config import ADMIN, AGGREGATOR_CHANNEL, TELEGRAM_API_HASH, TELEGRAM_API_ID, TELEGRAM_BOT_TOKEN, \
+    BOT_SESSION
 from aggregator.posts_storage import NoNewPosts, PostStorage
 from aggregator.telegram_slow_client import TelegramSlowClient
 
@@ -45,9 +46,7 @@ def get_request_pattern(post_storage: PostStorage) -> re.Pattern:
 
 def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
     logger.info("Creating bot")
-    bot = TelegramSlowClient(StringSession(), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=0.005).start(
-        bot_token=TELEGRAM_BOT_TOKEN
-    )
+    bot = TelegramSlowClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH, min_request_interval=0.005)
 
     # TODO: should we parse album here? nea
     @bot.on(events.NewMessage(chats=AGGREGATOR_CHANNEL))
