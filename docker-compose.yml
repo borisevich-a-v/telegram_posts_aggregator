@@ -2,6 +2,8 @@ services:
   app:
     build: .
     image: post_aggregator
+    depends_on:
+      - migration
     # It's better to not restart this container automatically, due to tg limitations
     restart: no
     command: poetry run python -m aggregator

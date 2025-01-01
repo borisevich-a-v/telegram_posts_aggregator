@@ -35,3 +35,5 @@ ADMIN = int(os.environ.get("ADMIN", 0))
 AGGREGATOR_CHANNEL = str(os.environ.get("AGGREGATOR_CHANNEL"))
 
 USER_TIME_ZONE = pendulum.timezone(str(os.environ.get("TIMEZONE", "UTC")))  # The developer is the only user
+
+UPDATE_WHITELISTED_CHANNELS_INTERVAL = int(os.environ.get("UPDATE_WHITELISTED_CHANNELS_INTERVAL", 300))  # seconds

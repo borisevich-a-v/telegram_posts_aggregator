@@ -3,14 +3,14 @@ from unittest.mock import Mock
 
 import pytest
 
-from aggregator.bot.create_bot import PostRequest, PostRequestError, get_request_pattern
+from aggregator.bot.create_bot import PostRequest, PostRequestError, get_post_request_pattern
 
 
 def test_get_request_pattern():
     post_storage = Mock()
     post_storage.get_all_custom_channel_types = Mock(return_value=["type1", "type2"])
 
-    res = get_request_pattern(post_storage)
+    res = get_post_request_pattern(post_storage)
 
     expected = re.compile(r"/(type1|type2|next)(\d{0,5})")
 
