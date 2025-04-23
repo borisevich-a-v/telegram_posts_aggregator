@@ -46,7 +46,7 @@ class PostRequest(NamedTuple):
 
 def get_post_request_pattern(post_storage: PostStorage) -> re.Pattern:
     type_pattern = f"({'|'.join(t for t in (post_storage.get_all_custom_channel_types() + [ANY_CHANNEL_COMMAND]))})"
-    amount_pattern = rf"(\d{{0,5}})"
+    amount_pattern = r"(\d{0,5})"
     return re.compile(rf"/{type_pattern}{amount_pattern}")
 
 
