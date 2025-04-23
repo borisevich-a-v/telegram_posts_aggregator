@@ -6,7 +6,7 @@ services:
       - migration
     # It's better to not restart this container automatically, due to tg limitations
     restart: no
-    command: poetry run python -m aggregator
+    command: uv run python -m aggregator
     environment:
       ENVIRONMENT: container
     networks:
@@ -32,7 +32,7 @@ services:
     image: post_aggregator
     depends_on:
       - postgres
-    command: alembic upgrade head
+    command: uv run alembic upgrade head
     environment:
       ENVIRONMENT: container
     networks:
