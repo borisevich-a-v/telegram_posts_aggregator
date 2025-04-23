@@ -20,5 +20,5 @@ venv/
 **/__pycache__/
 **/*.py[cod]
 
-# Logs
+# Misc
 *.log

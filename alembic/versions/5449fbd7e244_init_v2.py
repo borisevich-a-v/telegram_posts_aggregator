@@ -10,8 +10,9 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 
-from aggregator.models import NOT_SPECIFIED_CHANNEL_TYPE
 from alembic import op
+
+NOT_SPECIFIED_CHANNEL_TYPE = "__NOT_SPECIFIED_TYPE"
 
 # revision identifiers, used by Alembic.
 revision: str = "5449fbd7e244"
@@ -55,7 +56,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("original_channel_id", "original_message_id", name="source_message_uniq"),
     )
-    op.execute("INSERT INTO public.channel_type (id, type_)" f"VALUES (0, '{NOT_SPECIFIED_CHANNEL_TYPE}')")
+    op.execute(f"INSERT INTO public.channel_type (id, type_)VALUES (0, '{NOT_SPECIFIED_CHANNEL_TYPE}')")
 
 
 def downgrade() -> None:

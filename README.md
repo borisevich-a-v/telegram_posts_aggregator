@@ -4,9 +4,9 @@ Aggregate posts from several channels and send it via bot according the rules.
 
 ## Diagrams
 ### Overview
-![ALT TEXT](./documentaion/diagrams/overview_diagram.png)
+![ALT TEXT](documentation/diagrams/overview_diagram.png)
 ### DB schema
-![ALT TEXT](./documentaion/diagrams/metadata_db.png)
+![ALT TEXT](documentation/diagrams/metadata_db.png)
 
 
 

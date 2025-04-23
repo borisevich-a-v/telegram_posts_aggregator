@@ -1,36 +1,30 @@
-[tool.poetry]
-name = "telegram-posts-aggregator"
+[project]
+name = "aggregator"
 version = "0.1.0"
 description = ""
 authors = ["Andrei Borisevich <andreyborisevichleti@gmail.com>"]
+requires-python = ">=3.13"
 readme = "README.md"
-packages = [
-    { include = "aggregator", from = "src" },
-  ]
+dependencies = [
+    "alembic>=1.15.2",
+    "loguru>=0.7.3",
+    "pendulum>=3.1.0",
+    "psycopg2-binary>=2.9.10",
+    "python-dotenv>=1.1.0",
+    "sqlalchemy>=2.0.40",
+    "telethon>=1.40.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-telethon = "^1.37.0"
-python-dotenv = "^1.0.1"
-loguru = "^0.7.2"
-pendulum = "^3.0.0"
-sqlalchemy = "^2.0.35"
-psycopg2-binary = "^2.9.9"
-alembic = "^1.13.3"
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "sqlalchemy-stubs>=0.4",
+]
+[tool.setuptools.packages.find]
+where = ["src"]
 
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^4.0.1"
-pytest = "^8.3.3"
-sqlalchemy-stubs = "^0.4"
-pytest-asyncio = "^0.24.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = "tests"
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+[tool.ruff]
+line-length = 120
+exclude = [".venv", "alembic"]

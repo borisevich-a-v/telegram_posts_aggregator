@@ -10,8 +10,7 @@ up-infra:
 	docker compose up -d postgres migration --build
 
 up-local: up-infra
-	poetry install
-	poetry run python -m aggregator
+	uv run python -m aggregator
 
 down:
 	docker compose down
@@ -20,7 +19,7 @@ render-diagrams:
 	./utilities/render_diagram.sh
 
 generate-bot-session:
-	poetry run python utilities/generate_session.py --bot
+	uv run python utilities/generate_session.py --bot
 
 generate-client-session:
-	poetry run python utilities/generate_session.py --client
+	uv run python utilities/generate_session.py --client

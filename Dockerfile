@@ -1,23 +1,16 @@
-FROM python:3.12.7-slim
+FROM python:3.13-slim-bookworm
 
-RUN apt-get update -y  \
-    && python -m pip install poetry
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+ENV UV_COMPILE_BYTECODE=1
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
-ENV PYTHONUNBUFFERED=1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false
 
-WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-# Preinstall dependencies
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-interaction --no-ansi --no-root
+WORKDIR /aggregator
+COPY uv.lock pyproject.toml ./
+RUN uv sync --locked
 
-COPY . .
-
-RUN poetry install --no-interaction --no-ansi --only-root
-
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-interaction --no-ansi
-
-COPY . .
+COPY ./ ./
