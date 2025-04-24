@@ -2,10 +2,14 @@ from datetime import datetime
 from typing import Any
 
 from loguru import logger
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
+from sqlalchemy import select, update
+
+from sqlalchemy.ext.asyncio import AsyncSession
 from telethon.tl.types import Message
 from telethon.utils import get_peer_id
 
+from aggregator.db import DatabaseSessionManager
 from aggregator.models import NOT_SPECIFIED_CHANNEL_TYPE, ChannelModel, ChannelTypeModel, MessageModel
 
 MESSAGE_ID = int
@@ -20,14 +24,14 @@ class PostDuplication(Exception):
 
 
 class PostStorage:
-    def __init__(self, session_maker) -> None:
+    def __init__(self, sessionmanager: DatabaseSessionManager) -> None:
         logger.info("Post storage is initializing...")
-        self.session_maker = session_maker
+        self.sessionmanager = sessionmanager
 
-    def post(
+    async def post(
         self, message_id: MESSAGE_ID, grouped_id: int, event_peer_id, original_channel_id, original_message_id
     ) -> None:
-        with self.session_maker() as session:
+        async with self.sessionmanager.session() as session:
             orm_message = MessageModel(
                 message_id=message_id,
                 grouped_id=grouped_id,
@@ -36,48 +40,44 @@ class PostStorage:
                 original_message_id=original_message_id,
             )
             session.add(orm_message)
-            session.commit()
+            await session.commit()
 
-    def _get_first_unsent_message(self, session: Session, channel_type: Any) -> MessageModel:
-        # My first code with SQLAlchemy, it's bad, but I'll fix it later
-        unsent_message_query = session.query(MessageModel).join(ChannelModel).filter(MessageModel.sent.is_(None))
+    async def _get_first_unsent_message(self, session: AsyncSession, channel_type: Any) -> MessageModel:
+        stmt = select(MessageModel).join(ChannelModel).filter(MessageModel.sent.is_(None))
+
         if channel_type is not None:
-            unsent_message_query = unsent_message_query.join(ChannelTypeModel).filter(
-                ChannelTypeModel.type_ == channel_type
-            )
+            stmt = stmt.join(ChannelTypeModel).filter(ChannelTypeModel.type_ == channel_type)
 
-        first_unsent_message = unsent_message_query.order_by(MessageModel.id).first()
+        stmt = stmt.order_by(MessageModel.id)
+        result = await session.scalars(stmt)
+        first_unsent_message: MessageModel = result.first()
 
         if not first_unsent_message:
             raise NoNewPosts("No new posts in the storage")
+
         return first_unsent_message
 
-    def get_oldest_unsent_post(self, channel_type: str | None = None) -> list[MESSAGE_ID]:
+    async def get_oldest_unsent_post(self, channel_type: str | None = None) -> list[MESSAGE_ID]:
         logger.debug("Channel type is {}", channel_type)
-        with self.session_maker() as session:
-            first_unsent_message = self._get_first_unsent_message(session, channel_type)
+        async with self.sessionmanager.session() as session:
+            first_unsent_message = await self._get_first_unsent_message(session, channel_type)
 
             if first_unsent_message.grouped_id is None:
                 return [first_unsent_message.message_id]
 
-            return [
-                msg.message_id
-                for msg in (
-                    session.query(MessageModel.message_id)
-                    .filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
-                    .all()
-                )
-            ]
-
-    def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
-        with self.session_maker() as session:
-            session.query(MessageModel).filter(MessageModel.message_id.in_(message_ids)).update(
-                {MessageModel.sent: datetime.now()}
+            result = await session.scalars(
+                select(MessageModel.message_id).filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
             )
-            session.commit()
+            return list(result)
 
-    def is_duplicate(self, msgs: list[Message]) -> bool:
-        with self.session_maker() as session:
+    async def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
+        async with self.sessionmanager.session() as session:
+            stmt = update(MessageModel).where(MessageModel.message_id.in_(message_ids)).values(sent=datetime.now())
+            await session.execute(stmt)
+            await session.commit()
+
+    async def is_duplicate(self, msgs: list[Message]) -> bool:
+        async with self.sessionmanager.session() as session:
             for msg in msgs:
                 # If message is forwarded, then there is an obvious risk of duplication, if it is an original message
                 # then there is still possibility that Telethon could catch this message multiple times, so we have to
@@ -88,30 +88,33 @@ class PostStorage:
                 else:
                     message_id = msg.fwd_from.channel_post
                     channel_id = get_peer_id(msg.fwd_from.from_id)
-
-                res = (
-                    session.query(MessageModel)
-                    .filter(MessageModel.original_message_id == message_id, MessageModel.channel_id == channel_id)
-                    .first()
+                stmt = select(MessageModel.id).where(
+                    MessageModel.original_message_id == message_id, MessageModel.channel_id == channel_id
                 )
-                if res:
+                result = await session.execute(stmt)
+                existing = result.scalar_one_or_none()
+                if existing:
                     return True
         return False
 
-    def get_all_custom_channel_types(self):
+    async def get_all_custom_channel_types(self) -> list[str]:
         """Return all channels types except default one"""
-        with self.session_maker() as session:
-            types = (
-                session.query(ChannelTypeModel.type_).filter(ChannelTypeModel.type_ != NOT_SPECIFIED_CHANNEL_TYPE).all()
-            )
-        return [t[0] for t in types]
+        async with self.sessionmanager.session() as session:
+            stmt = select(ChannelTypeModel.type_).where(ChannelTypeModel.type_ != NOT_SPECIFIED_CHANNEL_TYPE).distinct()
+            types = await session.execute(stmt)
+        return types.scalars().all()
 
-    def get_whitelisted_channel_ids(self) -> list[int]:
-        with self.session_maker() as session:
-            channel_ids = session.query(ChannelModel.id).all()
-        return [t[0] for t in channel_ids]
+    async def get_whitelisted_channel_ids(self) -> list[int]:
+        async with self.sessionmanager.session() as session:
+            channel_ids = await session.execute(select(ChannelModel.id))
+            return channel_ids.scalars().all()
 
-    def add_channel(self, id_: int, name: str | None) -> None:
-        with self.session_maker() as session:
+    async def add_channel(self, id_: int, name: str | None) -> None:
+        async with self.sessionmanager.session() as session:
             session.add(ChannelModel(id=id_, name=name))
-            session.commit()
+            await session.commit()
+
+    async def get_all_channels(self) -> list[ChannelModel]:
+        async with self.sessionmanager.session() as session:
+            result = await session.execute(select(ChannelModel).options(joinedload(ChannelModel.type_)))
+            return result.scalars().all()

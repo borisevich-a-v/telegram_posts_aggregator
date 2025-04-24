@@ -46,7 +46,7 @@ async def continuously_update_channel_listeners(
             return
 
         async with FORWARDING_MESSAGE_LOCK:
-            if post_storage.is_duplicate(messages):
+            if await post_storage.is_duplicate(messages):
                 logger.warning("The messages have been saved previously: {}", messages)
                 return
             logger.info("New messages {} will be forwarded into the aggregation channel", messages)
@@ -59,7 +59,7 @@ async def continuously_update_channel_listeners(
             forwarded_from_channel_id = get_peer_id(messages[0].peer_id)
 
             for fwd_msg, msg in zip(fwd_messages, messages):
-                post_storage.post(
+                await post_storage.post(
                     fwd_msg.id,
                     msg.grouped_id,
                     forwarded_from_channel_id,
@@ -70,7 +70,7 @@ async def continuously_update_channel_listeners(
 
     while True:
         logger.debug("Updating channels to listen.")
-        whitelisted_channels = post_storage.get_whitelisted_channel_ids()
+        whitelisted_channels = await post_storage.get_whitelisted_channel_ids()
         message_event = events.NewMessage(whitelisted_channels)
         album_event = events.Album(whitelisted_channels)
 
