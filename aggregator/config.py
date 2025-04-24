@@ -31,6 +31,8 @@ BOT_SESSION = str(os.environ.get("BOT_SESSION"))
 DB_CONNECTION_STRING = str(os.environ.get("DB_CONNECTION_STRING"))
 DB_MIGRATION_CONNECTION_STRING = str(os.environ.get("DB_MIGRATION_CONNECTION_STRING"))
 
+OPENAI_API_KEY = str(os.environ.get("OPENAI_API_KEY"))
+
 ADMIN = int(os.environ.get("ADMIN", 0))
 
 AGGREGATOR_CHANNEL = str(os.environ.get("AGGREGATOR_CHANNEL"))

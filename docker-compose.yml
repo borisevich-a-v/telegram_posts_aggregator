@@ -14,7 +14,7 @@ services:
 
 
   postgres:
-    image: postgres:17.2
+    image: pgvector/pgvector:pg17
     restart: on-failure
     environment:
       POSTGRES_USER: admin

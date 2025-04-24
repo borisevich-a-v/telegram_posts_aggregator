@@ -1,3 +1,4 @@
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -53,3 +54,13 @@ class ChannelTypeModel(Base):
 
     def __repr__(self):
         return f"ChannelTypeModel({self.id, self.type_})"
+
+
+VECTOR_DIMENSION = 1536
+
+
+class MessageVectorModel(Base):
+    __tablename__ = "message_vector"
+
+    id = Column(Integer, primary_key=True)
+    embedding = Column(Vector(VECTOR_DIMENSION), nullable=False)
