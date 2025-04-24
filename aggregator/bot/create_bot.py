@@ -19,6 +19,7 @@ from aggregator.posts_storage import NoNewPosts, PostStorage
 
 ANY_CHANNEL_COMMAND = "next"
 ADD_CHANNEL_PREFIX_COMMAND = "/add_channel "
+LIST_CHANNELS_COMMAND = "/list_channels"
 
 
 class PostRequestError(Exception):
@@ -44,8 +45,9 @@ class PostRequest(NamedTuple):
         return cls(channel_type, amount)
 
 
-def get_post_request_pattern(post_storage: PostStorage) -> re.Pattern:
-    type_pattern = f"({'|'.join(t for t in (post_storage.get_all_custom_channel_types() + [ANY_CHANNEL_COMMAND]))})"
+async def get_post_request_pattern(post_storage: PostStorage) -> re.Pattern:
+    channel_types = await post_storage.get_all_custom_channel_types()
+    type_pattern = f"({'|'.join(t for t in (channel_types + [ANY_CHANNEL_COMMAND]))})"
     amount_pattern = r"(\d{0,5})"
     return re.compile(rf"/{type_pattern}{amount_pattern}")
 
@@ -54,7 +56,7 @@ async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClien
     logger.info("Creating bot")
     bot = TelegramClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
-    @bot.on(events.NewMessage(pattern=get_post_request_pattern(post_storage), from_users=ADMIN))
+    @bot.on(events.NewMessage(pattern=await get_post_request_pattern(post_storage), from_users=ADMIN))
     async def handle_posts_request_command(event) -> None:
         logger.info(f"Got {event.pattern_match} request")
 
@@ -67,15 +69,14 @@ async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClien
         for _ in range(request.amount):
             try:
                 warden.check_allowance()
-                pass
             except NotAllowed as exp:
                 await event.reply(str(exp))
                 return
 
             try:
-                msgs = post_storage.get_oldest_unsent_post(request.channel_type)
+                msgs = await post_storage.get_oldest_unsent_post(request.channel_type)
                 await event.client.forward_messages(entity=ADMIN, messages=msgs, from_peer=AGGREGATOR_CHANNEL)
-                post_storage.set_sent_multiple(msgs)
+                await post_storage.set_sent_multiple(msgs)
             except NoNewPosts:
                 await event.reply("No updates")
                 return
@@ -90,14 +91,34 @@ async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClien
             raise ValueError(
                 f"{event.pattern_match} doesn't satisfy the required structure: '{ADD_CHANNEL_PREFIX_COMMAND}<integer>'"
             )
+        # ToDo: if channel hidden that it will not parse the name, need to ask client to parse it
         channel_name = get_display_name(channel_id)
 
-        post_storage.add_channel(channel_id, channel_name)
+        await post_storage.add_channel(channel_id, channel_name)
         logger.info("Channel id={}, name={} has been added", channel_id, channel_name or "HIDDEN")
         await event.reply(
             f"Channel with id={channel_id}, name={channel_name or 'HIDDEN'} has been added."
             f" It's needed to wait up to {UPDATE_WHITELISTED_CHANNELS_INTERVAL} to refresh listening channels"
         )
+
+    @bot.on(events.NewMessage(pattern=LIST_CHANNELS_COMMAND))
+    async def handle_list_channels(event) -> None:
+        logger.info(f"Got {event.pattern_match} request")
+
+        channels = await post_storage.get_all_channels()
+        if not channels:
+            await event.reply("No channels in the table")
+
+        s = ""
+        header = f"{'id':^20} | {'name':^20} | {'type':^20}\n"
+        s += header
+
+        for i in channels:
+            s += f"{i.id:^20} | {i.name[:20]:^20} | {i.type_[:20]:^20}\n"
+
+        print(s)
+
+        await event.reply(s)
 
     await bot.start()
     logger.info("Bot has been initialized")

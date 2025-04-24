@@ -29,6 +29,7 @@ CLIENT_SESSION = str(os.environ.get("CLIENT_SESSION"))
 BOT_SESSION = str(os.environ.get("BOT_SESSION"))
 
 DB_CONNECTION_STRING = str(os.environ.get("DB_CONNECTION_STRING"))
+DB_MIGRATION_CONNECTION_STRING = str(os.environ.get("DB_MIGRATION_CONNECTION_STRING"))
 
 ADMIN = int(os.environ.get("ADMIN", 0))
 

@@ -1,16 +1,16 @@
 import re
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 
 import pytest
 
 from aggregator.bot.create_bot import get_post_request_pattern, PostRequest, PostRequestError
 
 
-def test_get_request_pattern():
+async def test_get_request_pattern():
     post_storage = Mock()
-    post_storage.get_all_custom_channel_types = Mock(return_value=["type1", "type2"])
+    post_storage.get_all_custom_channel_types = AsyncMock(return_value=["type1", "type2"])
 
-    res = get_post_request_pattern(post_storage)
+    res = await get_post_request_pattern(post_storage)
 
     expected = re.compile(r"/(type1|type2|next)(\d{0,5})")
 
