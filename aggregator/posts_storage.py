@@ -10,7 +10,13 @@ from telethon.tl.types import Message
 from telethon.utils import get_peer_id
 
 from aggregator.db import DatabaseSessionManager
-from aggregator.models import NOT_SPECIFIED_CHANNEL_TYPE, ChannelModel, ChannelTypeModel, MessageModel
+from aggregator.models import (
+    NOT_SPECIFIED_CHANNEL_TYPE,
+    ChannelModel,
+    ChannelTypeModel,
+    MessageModel,
+    MessageVectorModel,
+)
 
 MESSAGE_ID = int
 
@@ -29,17 +35,28 @@ class PostStorage:
         self.sessionmanager = sessionmanager
 
     async def post(
-        self, message_id: MESSAGE_ID, grouped_id: int, event_peer_id, original_channel_id, original_message_id
+        self,
+        tg_message_id: MESSAGE_ID,
+        grouped_id: int,
+        event_peer_id,
+        original_channel_id,
+        original_message_id,
+        embedding: list[float] | None,
     ) -> None:
         async with self.sessionmanager.session() as session:
-            orm_message = MessageModel(
-                message_id=message_id,
+            message_orm = MessageModel(
+                tg_message_id=tg_message_id,
                 grouped_id=grouped_id,
                 channel_id=event_peer_id,
                 original_channel_id=original_channel_id,
                 original_message_id=original_message_id,
             )
-            session.add(orm_message)
+            session.add(message_orm)
+
+            if embedding:
+                embedding_orm = MessageVectorModel(message=message_orm, embedding=embedding)
+                session.add(embedding_orm)
+
             await session.commit()
 
     async def _get_first_unsent_message(self, session: AsyncSession, channel_type: Any) -> MessageModel:
@@ -63,16 +80,16 @@ class PostStorage:
             first_unsent_message = await self._get_first_unsent_message(session, channel_type)
 
             if first_unsent_message.grouped_id is None:
-                return [first_unsent_message.message_id]
+                return [first_unsent_message.tg_message_id]
 
             result = await session.scalars(
-                select(MessageModel.message_id).filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
+                select(MessageModel.tg_message_id).filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
             )
             return list(result)
 
     async def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
         async with self.sessionmanager.session() as session:
-            stmt = update(MessageModel).where(MessageModel.message_id.in_(message_ids)).values(sent=datetime.now())
+            stmt = update(MessageModel).where(MessageModel.tg_message_id.in_(message_ids)).values(sent=datetime.now())
             await session.execute(stmt)
             await session.commit()
 
@@ -96,6 +113,20 @@ class PostStorage:
                 if existing:
                     return True
         return False
+
+    async def is_group_processed(self, grouped_id: int) -> bool:
+        async with self.sessionmanager.session() as session:
+            stmt = select(
+                (
+                    select(MessageModel.id)
+                    .join(MessageVectorModel, MessageVectorModel.message_id == MessageModel.id)
+                    .where(MessageModel.grouped_id == grouped_id, MessageVectorModel.id.isnot(None))
+                ).exists()
+            )
+
+            result = await session.execute(stmt)
+            is_processed = result.scalar_one_or_none()
+            return bool(is_processed)
 
     async def get_all_custom_channel_types(self) -> list[str]:
         """Return all channels types except default one"""
