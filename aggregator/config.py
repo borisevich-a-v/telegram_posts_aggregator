@@ -4,6 +4,7 @@ import pendulum
 from dotenv import load_dotenv
 from loguru import logger
 
+
 # Sometimes it is quite useful to have both a container and a local setups. Unfortunately we should have at most
 # one client for every session, otherwise the session will be destroyed, so to not mix them we keep two different
 # env files.
@@ -32,6 +33,8 @@ DB_CONNECTION_STRING = str(os.environ.get("DB_CONNECTION_STRING"))
 DB_MIGRATION_CONNECTION_STRING = str(os.environ.get("DB_MIGRATION_CONNECTION_STRING"))
 
 OPENAI_API_KEY = str(os.environ.get("OPENAI_API_KEY"))
+EMBEDDING_MODEL = "text-embedding-3-large"
+VECTOR_DIMENSION = 1536
 
 ADMIN = int(os.environ.get("ADMIN", 0))
 

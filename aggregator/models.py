@@ -2,6 +2,8 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import declarative_base, relationship
 
+from aggregator import config
+
 Base = declarative_base()
 
 NOT_SPECIFIED_CHANNEL_TYPE = "__NOT_SPECIFIED_TYPE"
@@ -11,7 +13,7 @@ class MessageModel(Base):
     __tablename__ = "message"
 
     id = Column(Integer, primary_key=True)
-    message_id = Column(Integer, nullable=False)  # message id in the aggr channel
+    tg_message_id = Column(Integer, nullable=False)  # message id in the aggr channel
     grouped_id = Column(BigInteger, nullable=True)  # grouped_id is a Telegram hack to group messages
     sent = Column(DateTime, nullable=True)  # have the message been sent to the user. NULL if it haven't been sent
 
@@ -23,11 +25,12 @@ class MessageModel(Base):
     original_message_id = Column(Integer, nullable=False)
 
     channel = relationship("ChannelModel", back_populates="messages")
+    embedding = relationship("MessageVectorModel", back_populates="message")
 
     __table_args__ = (UniqueConstraint("original_channel_id", "original_message_id", name="source_message_uniq"),)
 
     def __repr__(self):
-        return f"MessageModel({self.id, self.message_id, self.grouped_id, self.channel_id, self.sent, self.original_message_id})"
+        return f"MessageModel({self.id, self.tg_message_id, self.grouped_id, self.channel_id, self.sent, self.original_message_id})"
 
 
 class ChannelModel(Base):
@@ -56,11 +59,11 @@ class ChannelTypeModel(Base):
         return f"ChannelTypeModel({self.id, self.type_})"
 
 
-VECTOR_DIMENSION = 1536
-
-
 class MessageVectorModel(Base):
     __tablename__ = "message_vector"
 
     id = Column(Integer, primary_key=True)
-    embedding = Column(Vector(VECTOR_DIMENSION), nullable=False)
+    message_id = Column(Integer, ForeignKey("message.id"), nullable=False)
+    embedding = Column(Vector(config.VECTOR_DIMENSION), nullable=False)
+
+    message = relationship("MessageModel", back_populates="embedding")
