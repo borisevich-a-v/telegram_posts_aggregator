@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Any
 
 from loguru import logger
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import select, update
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,33 +58,74 @@ class PostStorage:
 
             await session.commit()
 
-    async def _get_first_unsent_message(self, session: AsyncSession, channel_type: Any) -> MessageModel:
-        stmt = select(MessageModel).join(ChannelModel).filter(MessageModel.sent.is_(None))
+    async def get_first_unsent_message(self, channel_type: str | None, session: AsyncSession) -> MessageModel:
+        stmt = (
+            select(MessageModel)
+            .options(selectinload(MessageModel.embedding))
+            .join(ChannelModel)
+            .where(MessageModel.sent.is_(None))
+        )
+        if channel_type:
+            stmt = stmt.where(MessageModel.channel.type_ == channel_type)
 
-        if channel_type is not None:
-            stmt = stmt.join(ChannelTypeModel).filter(ChannelTypeModel.type_ == channel_type)
+        first = (await session.execute(stmt.order_by(MessageModel.id).limit(1))).scalar_one_or_none()
 
-        stmt = stmt.order_by(MessageModel.id)
-        result = await session.scalars(stmt)
-        first_unsent_message: MessageModel = result.first()
-
-        if not first_unsent_message:
+        if not first:
             raise NoNewPosts("No new posts in the storage")
 
-        return first_unsent_message
+        return first
+
+    async def get_album_by_grouped_id(self, grouped_id: int, session: AsyncSession) -> list[MessageModel]:
+        stmt = (
+            select(MessageModel)
+            .options(selectinload(MessageModel.embedding))
+            .where(MessageModel.grouped_id == grouped_id)
+        )
+        res = await session.execute(stmt)
+        return list(res.scalars().all())
+
+    async def get_similar_posts(
+        self,
+        target_vec: list[float],
+        session: AsyncSession,
+        similarity_threshold: float = 0.6,
+    ) -> list[list[MessageModel]]:
+        logger.debug("Looking for similar posts")
+        stmt = (
+            select(MessageModel)
+            .select_from(MessageVectorModel)
+            .join(MessageModel, MessageModel.id == MessageVectorModel.message_id)
+            .where(MessageVectorModel.embedding.cosine_distance(target_vec) < similarity_threshold)
+            .order_by(MessageVectorModel.embedding.cosine_distance(target_vec), MessageModel.grouped_id)
+        )
+
+        msgs: list[MessageModel] = (await session.execute(stmt)).scalars().all()
+
+        posts = []
+        last_group_id = None
+        for msg in msgs:
+            if msg.grouped_id is None:
+                posts.append([msg])
+            elif msg.grouped_id != last_group_id:
+                posts.append([msg])
+            else:  # msg.grouped_id == last_group_id
+                posts[-1].append(msg)
+
+        return posts
+
+    async def get_similar_messages_ids(self, embedding: list[float]) -> list[list[MESSAGE_ID]]:
+        async with self.sessionmanager.session() as session:
+            similar_posts = await self.get_similar_posts(embedding, session)
+            return [[msg.tg_message_id for msg in post] for post in similar_posts]
 
     async def get_oldest_unsent_post(self, channel_type: str | None = None) -> list[MESSAGE_ID]:
-        logger.debug("Channel type is {}", channel_type)
         async with self.sessionmanager.session() as session:
-            first_unsent_message = await self._get_first_unsent_message(session, channel_type)
-
-            if first_unsent_message.grouped_id is None:
-                return [first_unsent_message.tg_message_id]
-
-            result = await session.scalars(
-                select(MessageModel.tg_message_id).filter(MessageModel.grouped_id == first_unsent_message.grouped_id)
-            )
-            return list(result)
+            first_unsent_msg = await self.get_first_unsent_message(channel_type, session)
+            if first_unsent_msg.grouped_id is None:
+                msgs = [first_unsent_msg]
+            else:
+                msgs = await self.get_album_by_grouped_id(first_unsent_msg.grouped_id, session)
+            return [msg.tg_message_id for msg in msgs]
 
     async def set_sent_multiple(self, message_ids: list[MESSAGE_ID]) -> None:
         async with self.sessionmanager.session() as session:

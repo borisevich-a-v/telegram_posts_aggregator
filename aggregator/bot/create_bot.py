@@ -15,6 +15,7 @@ from aggregator.config import (
     TELEGRAM_API_ID,
     UPDATE_WHITELISTED_CHANNELS_INTERVAL,
 )
+from aggregator.openai_driver import OpenaiDriver
 from aggregator.posts_storage import NoNewPosts, PostStorage
 
 ANY_CHANNEL_COMMAND = "next"
@@ -52,7 +53,7 @@ async def get_post_request_pattern(post_storage: PostStorage) -> re.Pattern:
     return re.compile(rf"/{type_pattern}{amount_pattern}")
 
 
-async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClient:
+async def create_bot(post_storage: PostStorage, warden: Warden, openai_driver: OpenaiDriver) -> TelegramClient:
     logger.info("Creating bot")
     bot = TelegramClient(StringSession(BOT_SESSION), TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
@@ -72,14 +73,29 @@ async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClien
             except NotAllowed as exp:
                 await event.reply(str(exp))
                 return
-
             try:
-                msgs = await post_storage.get_oldest_unsent_post(request.channel_type)
-                await event.client.forward_messages(entity=ADMIN, messages=msgs, from_peer=AGGREGATOR_CHANNEL)
-                await post_storage.set_sent_multiple(msgs)
+                messages = await post_storage.get_oldest_unsent_post(request.channel_type)
             except NoNewPosts:
                 await event.reply("No updates")
                 return
+
+            await event.client.forward_messages(entity=ADMIN, messages=messages, from_peer=AGGREGATOR_CHANNEL)
+            await post_storage.set_sent_multiple(messages)
+
+    @bot.on(events.NewMessage(pattern="topic (.*)", from_users=ADMIN))
+    async def handle_messages_by_topic(event) -> None:
+        logger.info(f"Got {event.pattern_match} request")
+        original_request = event.pattern_match.group(1).strip()
+        rephrased_request = openai_driver.rewrite_query(original_request)
+        logger.info("ChatGPT rewrote request from {} to {}", original_request, rephrased_request)
+        vector = await openai_driver.get_embedding(rephrased_request)
+        posts = await post_storage.get_similar_messages_ids(vector)
+        if not posts:
+            logger.info("No similar posts")
+            return
+        for post in posts:
+            await event.client.forward_messages(entity=ADMIN, messages=post, from_peer=AGGREGATOR_CHANNEL)
+            # await post_storage.set_sent_multiple(post)
 
     @bot.on(events.NewMessage(pattern=f"{ADD_CHANNEL_PREFIX_COMMAND}(.*)"))
     async def handle_adding_new_channel(event) -> None:
@@ -115,8 +131,6 @@ async def create_bot(post_storage: PostStorage, warden: Warden) -> TelegramClien
 
         for i in channels:
             s += f"{i.id:^20} | {i.name[:20]:^20} | {i.type_[:20]:^20}\n"
-
-        print(s)
 
         await event.reply(s)
 
