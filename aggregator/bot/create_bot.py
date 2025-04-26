@@ -91,7 +91,7 @@ async def create_bot(post_storage: PostStorage, warden: Warden, openai_driver: O
         vector = await openai_driver.get_embedding(rephrased_request)
         posts = await post_storage.get_similar_messages_ids(vector)
         if not posts:
-            logger.info("No similar posts")
+            await event.reply("No similar posts")
             return
         for post in posts:
             await event.client.forward_messages(entity=ADMIN, messages=post, from_peer=AGGREGATOR_CHANNEL)
