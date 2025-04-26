@@ -17,7 +17,7 @@ if __name__ == "__main__":
     event_loop = asyncio.new_event_loop()
 
     telegram_agent_task = event_loop.create_task(create_telegram_agent(post_storage, openai_driver))
-    bot_task = event_loop.create_task(create_bot(post_storage, Warden()))
+    bot_task = event_loop.create_task(create_bot(post_storage, Warden(), openai_driver))
 
     logger.info("The infinite loop is running")
     event_loop.run_forever()
